@@ -1,0 +1,80 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            test
+            chore
+          scopes: |
+            prd-*
+            input
+            games
+            ui
+            platform
+            ci
+            core
+          requireScope: false
+
+  pr-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        run: |
+          FILES_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
+          LINES_ADDED=$(git diff --shortstat origin/${{ github.base_ref }}...HEAD | grep -oP '\d+(?= insertion)' || echo "0")
+          LINES_DELETED=$(git diff --shortstat origin/${{ github.base_ref }}...HEAD | grep -oP '\d+(?= deletion)' || echo "0")
+          LINES_CHANGED=$((LINES_ADDED + LINES_DELETED))
+
+          echo "Files changed: $FILES_CHANGED"
+          echo "Lines added: $LINES_ADDED"
+          echo "Lines deleted: $LINES_DELETED"
+          echo "Total lines changed: $LINES_CHANGED"
+
+          if [ "$FILES_CHANGED" -gt 50 ]; then
+            echo "⚠️ Warning: Large PR ($FILES_CHANGED files). Consider splitting."
+          fi
+
+          if [ "$LINES_CHANGED" -gt 1000 ]; then
+            echo "⚠️ Warning: Large PR ($LINES_CHANGED lines). Consider splitting."
+          fi
+
+  link-prd:
+    name: Check PRD Link
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if PR references a PRD
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || '';
+            const prTitle = context.payload.pull_request.title || '';
+            const hasPRDReference = /PRD-\d{3}/i.test(prBody + prTitle);
+
+            if (!hasPRDReference) {
+              core.warning('PR does not reference a PRD. Consider adding PRD-XXX to title or body.');
+            } else {
+              core.info('✅ PR references a PRD');
+            }
