@@ -4,9 +4,20 @@ This directory contains configuration for Claude Code on the web sessions.
 
 ## Files
 
+### hooks/SessionStart
+
+This hook automatically runs at the start of every Claude Code session to ensure the Flutter environment is ready. It:
+
+1. **Checks for Flutter** - Detects if Flutter is already available
+2. **Runs setup.sh** - Automatically runs setup if Flutter is not found
+3. **Configures PATH** - Ensures Flutter is in PATH for the current session
+4. **Displays status** - Shows environment info and quick command reference
+
+**This hook makes the environment setup completely automatic - no manual intervention needed!**
+
 ### setup.sh
 
-This script automatically sets up the Flutter development environment when you start a new Claude Code web session. It:
+This script sets up the Flutter development environment. It:
 
 1. **Installs Flutter SDK** (version 3.24.5 stable)
    - Downloads and extracts Flutter to `/opt/flutter`
@@ -93,3 +104,22 @@ sudo apt-get update
 - The script is idempotent - safe to run multiple times
 - Analytics are disabled by default
 - Linux desktop support is enabled automatically
+
+## Automated Workflow
+
+### First Session (Cold Start)
+1. Claude Code starts a new session
+2. SessionStart hook runs automatically
+3. Hook detects Flutter is not installed
+4. Hook runs setup.sh automatically
+5. Flutter SDK is downloaded and configured (~1-2 minutes)
+6. Environment is ready - you can immediately run `make test`
+
+### Subsequent Sessions
+1. Claude Code starts a new session
+2. SessionStart hook runs automatically
+3. Hook detects Flutter is already installed
+4. Hook ensures Flutter is in PATH
+5. Environment is ready immediately - you can run `make test` right away
+
+**Result**: From any cold start, just say "run tests" and everything works automatically!

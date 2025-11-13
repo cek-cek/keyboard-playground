@@ -1,0 +1,41 @@
+#!/bin/bash
+# SessionStart hook for keyboard-playground
+# This hook automatically sets up the Flutter environment when a new session starts
+
+set -e
+
+echo "🎯 Keyboard Playground Session Setup"
+echo ""
+
+# Check if Flutter is already available
+if command -v flutter &> /dev/null; then
+    echo "✓ Flutter is already available in PATH"
+    flutter --version | head -n 1
+else
+    echo "⚙️  Flutter not found in PATH, running setup..."
+    echo ""
+
+    # Run the setup script
+    cd /home/user/keyboard-playground
+    ./.claude/setup.sh
+fi
+
+# Ensure Flutter is in PATH for the session
+if [ -d "/opt/flutter/bin" ]; then
+    export PATH="/opt/flutter/bin:$PATH"
+elif [ -d "$HOME/flutter/bin" ]; then
+    export PATH="$HOME/flutter/bin:$PATH"
+fi
+
+# Quick environment check
+echo ""
+echo "📊 Environment Status:"
+echo "  Flutter version: $(flutter --version 2>/dev/null | head -n 1 || echo 'Not available')"
+echo "  Project: keyboard-playground"
+echo "  Working directory: $(pwd)"
+echo ""
+echo "💡 Quick commands:"
+echo "  • make test      - Run all tests"
+echo "  • make analyze   - Run static analysis"
+echo "  • make ci        - Run all CI checks"
+echo ""
