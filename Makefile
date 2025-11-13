@@ -39,7 +39,7 @@ coverage:
 	@echo "Coverage report generated at coverage/html/index.html"
 	@if [ "$$(uname)" = "Darwin" ]; then open coverage/html/index.html; fi
 	@if [ "$$(uname)" = "Linux" ]; then xdg-open coverage/html/index.html 2>/dev/null || echo "Open coverage/html/index.html in your browser"; fi
-	@if [ "$$(uname)" = "MINGW64_NT" ] || [ "$$(uname)" = "MSYS_NT" ] || [ -n "$$WINDIR" ]; then cmd.exe /c start coverage/html/index.html 2>/dev/null || echo "Open coverage/html/index.html in your browser"; fi
+	@if echo "$$(uname)" | grep -qi "mingw\|msys" || [ -n "$$WINDIR" ] || [ -n "$$SYSTEMROOT" ]; then cmd.exe /c start coverage/html/index.html 2>/dev/null || echo "Open coverage/html/index.html in your browser"; fi
 
 build-macos:
 	flutter build macos --debug
