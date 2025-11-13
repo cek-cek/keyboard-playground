@@ -1,0 +1,29 @@
+name: keyboard_playground
+description: A safe, fun keyboard and mouse playground for kids
+publish_to: 'none'  # Not publishing to pub.dev
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'  # Use latest stable Flutter 3.x SDK
+
+dependencies:
+  collection: ^1.18.0     # Collection utilities
+  equatable: ^2.0.5       # For value equality
+  flutter:
+    sdk: flutter
+  provider: ^6.1.0        # Recommended for simplicity
+
+dev_dependencies:
+  flutter_lints: ^3.0.0   # Official Flutter lints
+  flutter_test:
+    sdk: flutter
+  test: ^1.24.0
+  very_good_analysis: ^5.1.0  # Additional strict lints
+
+flutter:
+  uses-material-design: true
+
+  # Uncomment when we add assets:
+  # assets:
+  #   - assets/images/
+  #   - assets/sounds/
