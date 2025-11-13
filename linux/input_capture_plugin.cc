@@ -250,29 +250,19 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
 
     case ButtonPress:
     case ButtonRelease: {
-      fl_value_set_string_take(event_map, "type",
-                              fl_value_new_string(event_type == ButtonPress ? "mouseDown" : "mouseUp"));
-
       // Extract button number (byte 1)
       unsigned char button = event_data[1];
-      const char* button_name = "other";
-      if (button == 1) button_name = "left";
-      else if (button == 2) button_name = "middle";
-      else if (button == 3) button_name = "right";
-
-      fl_value_set_string_take(event_map, "button", fl_value_new_string(button_name));
-
+      
       // Extract position (bytes 24-27 for x, 28-31 for y - root coordinates)
       int16_t x = *(int16_t*)(event_data + 24);
       int16_t y = *(int16_t*)(event_data + 26);
       fl_value_set_string_take(event_map, "x", fl_value_new_float(x));
       fl_value_set_string_take(event_map, "y", fl_value_new_float(y));
 
-      // Handle scroll wheel (buttons 4, 5 for vertical, 6, 7 for horizontal)
+      // Handle scroll wheel separately (buttons 4, 5 for vertical, 6, 7 for horizontal)
       if (button >= 4 && button <= 7) {
         fl_value_set_string_take(event_map, "type", fl_value_new_string("mouseScroll"));
-        fl_value_remove(event_map, fl_value_new_string("button"));
-
+        
         double deltaX = 0.0;
         double deltaY = 0.0;
         if (button == 4) deltaY = 1.0;      // Scroll up
@@ -282,6 +272,16 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
 
         fl_value_set_string_take(event_map, "deltaX", fl_value_new_float(deltaX));
         fl_value_set_string_take(event_map, "deltaY", fl_value_new_float(deltaY));
+      } else {
+        fl_value_set_string_take(event_map, "type",
+                                fl_value_new_string(event_type == ButtonPress ? "mouseDown" : "mouseUp"));
+        
+        const char* button_name = "other";
+        if (button == 1) button_name = "left";
+        else if (button == 2) button_name = "middle";
+        else if (button == 3) button_name = "right";
+
+        fl_value_set_string_take(event_map, "button", fl_value_new_string(button_name));
       }
 
       send_event_to_dart(self, event_map);
