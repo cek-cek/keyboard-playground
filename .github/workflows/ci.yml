@@ -56,7 +56,7 @@ jobs:
 
       - name: Check coverage
         uses: VeryGoodOpenSource/very_good_coverage@v2
-        continue-on-error: true  # Set to 10% for new projects; will increase as codebase matures
+        continue-on-error: true  # Coverage threshold is currently low for initial development; will increase as codebase matures
         with:
           min_coverage: 10  # Starting threshold for initial development
           exclude: |
