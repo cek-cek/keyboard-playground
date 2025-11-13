@@ -86,7 +86,7 @@ let mouseMask = (1 << CGEventType.mouseMoved.rawValue) |
 let trusted = AXIsProcessTrusted()
 if !trusted {
     // Prompt user to grant permission
-    let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true]
+    let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true]
     AXIsProcessTrustedWithOptions(options)
 }
 ```
