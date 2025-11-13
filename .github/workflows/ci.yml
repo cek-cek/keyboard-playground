@@ -56,21 +56,22 @@ jobs:
 
       - name: Check coverage
         uses: VeryGoodOpenSource/very_good_coverage@v2
-        continue-on-error: true
+        continue-on-error: true  # Coverage threshold is currently low for initial development; will increase as codebase matures
         with:
-          min_coverage: 10
+          min_coverage: 10  # Starting threshold for initial development
           exclude: |
             **/*.g.dart
             **/*.freezed.dart
             **/main.dart
 
       - name: Upload coverage to Codecov (optional)
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: github.event_name == 'push'
         with:
           files: ./coverage/lcov.info
           flags: unittests
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}  # Required for v4
 
   build-macos:
     name: Build macOS
@@ -93,7 +94,7 @@ jobs:
         run: flutter build macos --debug
 
       - name: Upload macOS artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           name: macos-build
@@ -127,7 +128,7 @@ jobs:
         run: flutter build linux --debug
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           name: linux-build
@@ -157,7 +158,7 @@ jobs:
         run: flutter build windows --debug
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           name: windows-build
