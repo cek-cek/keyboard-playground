@@ -1,32 +1,58 @@
 /// Platform-agnostic input event types for keyboard and mouse capture.
 ///
-/// This file defines the event model used across all platforms (macOS, Linux, Windows).
+/// This file defines the event model used across all platforms (macOS, Linux,
+/// Windows).
 library;
 
 /// Type of input event.
 enum InputEventType {
+  /// Key pressed down.
   keyDown,
+
+  /// Key released up.
   keyUp,
+
+  /// Mouse moved.
   mouseMove,
+
+  /// Mouse button pressed down.
   mouseDown,
+
+  /// Mouse button released up.
   mouseUp,
+
+  /// Mouse scroll wheel moved.
   mouseScroll,
 }
 
 /// Mouse button identifier.
 enum MouseButton {
+  /// Left mouse button.
   left,
+
+  /// Right mouse button.
   right,
+
+  /// Middle mouse button (scroll wheel).
   middle,
+
+  /// Other mouse button (e.g., side buttons).
   other,
 }
 
 /// Keyboard modifier keys.
 enum KeyModifier {
+  /// Shift key.
   shift,
+
+  /// Control key (Ctrl).
   control,
+
+  /// Alt key (Option on macOS).
   alt,
-  meta, // Cmd on macOS, Win on Windows
+
+  /// Meta key (Cmd on macOS, Win on Windows).
+  meta,
 }
 
 /// Base class for all input events.
@@ -40,6 +66,15 @@ abstract class InputEvent {
 
 /// Keyboard event (key down or key up).
 class KeyEvent extends InputEvent {
+  /// Creates a keyboard event.
+  KeyEvent({
+    required this.keyCode,
+    required this.key,
+    required this.modifiers,
+    required this.isDown,
+    required this.timestamp,
+  });
+
   /// Platform-specific key code.
   final int keyCode;
 
@@ -56,26 +91,28 @@ class KeyEvent extends InputEvent {
   @override
   final DateTime timestamp;
 
-  KeyEvent({
-    required this.keyCode,
-    required this.key,
-    required this.modifiers,
-    required this.isDown,
-    required this.timestamp,
-  });
-
   @override
-  InputEventType get type => isDown ? InputEventType.keyDown : InputEventType.keyUp;
+  InputEventType get type =>
+      isDown ? InputEventType.keyDown : InputEventType.keyUp;
 
   @override
   String toString() {
-    final modStr = modifiers.isEmpty ? '' : '${modifiers.map((m) => m.name).join('+')}+';
+    final modStr = modifiers.isEmpty
+        ? ''
+        : '${modifiers.map((m) => m.name).join('+')}+';
     return 'KeyEvent(${isDown ? 'down' : 'up'}: $modStr$key, code: $keyCode)';
   }
 }
 
 /// Mouse movement event.
 class MouseMoveEvent extends InputEvent {
+  /// Creates a mouse movement event.
+  MouseMoveEvent({
+    required this.x,
+    required this.y,
+    required this.timestamp,
+  });
+
   /// X coordinate of mouse position.
   final double x;
 
@@ -86,21 +123,25 @@ class MouseMoveEvent extends InputEvent {
   @override
   final DateTime timestamp;
 
-  MouseMoveEvent({
-    required this.x,
-    required this.y,
-    required this.timestamp,
-  });
-
   @override
   InputEventType get type => InputEventType.mouseMove;
 
   @override
-  String toString() => 'MouseMoveEvent(x: ${x.toStringAsFixed(1)}, y: ${y.toStringAsFixed(1)})';
+  String toString() => 'MouseMoveEvent(x: ${x.toStringAsFixed(1)}, '
+      'y: ${y.toStringAsFixed(1)})';
 }
 
 /// Mouse button event (button down or button up).
 class MouseButtonEvent extends InputEvent {
+  /// Creates a mouse button event.
+  MouseButtonEvent({
+    required this.button,
+    required this.x,
+    required this.y,
+    required this.isDown,
+    required this.timestamp,
+  });
+
   /// Which button was pressed.
   final MouseButton button;
 
@@ -117,16 +158,9 @@ class MouseButtonEvent extends InputEvent {
   @override
   final DateTime timestamp;
 
-  MouseButtonEvent({
-    required this.button,
-    required this.x,
-    required this.y,
-    required this.isDown,
-    required this.timestamp,
-  });
-
   @override
-  InputEventType get type => isDown ? InputEventType.mouseDown : InputEventType.mouseUp;
+  InputEventType get type =>
+      isDown ? InputEventType.mouseDown : InputEventType.mouseUp;
 
   @override
   String toString() {
@@ -137,6 +171,13 @@ class MouseButtonEvent extends InputEvent {
 
 /// Mouse scroll wheel event.
 class MouseScrollEvent extends InputEvent {
+  /// Creates a mouse scroll event.
+  MouseScrollEvent({
+    required this.deltaX,
+    required this.deltaY,
+    required this.timestamp,
+  });
+
   /// Horizontal scroll delta.
   final double deltaX;
 
@@ -147,17 +188,12 @@ class MouseScrollEvent extends InputEvent {
   @override
   final DateTime timestamp;
 
-  MouseScrollEvent({
-    required this.deltaX,
-    required this.deltaY,
-    required this.timestamp,
-  });
-
   @override
   InputEventType get type => InputEventType.mouseScroll;
 
   @override
   String toString() {
-    return 'MouseScrollEvent(deltaX: ${deltaX.toStringAsFixed(1)}, deltaY: ${deltaY.toStringAsFixed(1)})';
+    return 'MouseScrollEvent(deltaX: ${deltaX.toStringAsFixed(1)}, '
+        'deltaY: ${deltaY.toStringAsFixed(1)})';
   }
 }

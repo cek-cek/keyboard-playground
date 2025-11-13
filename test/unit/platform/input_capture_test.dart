@@ -29,7 +29,8 @@ void main() {
         expect(keyEvent.key, 'a');
         expect(keyEvent.isDown, true);
         expect(keyEvent.modifiers, isEmpty);
-        expect(keyEvent.timestamp, DateTime.fromMillisecondsSinceEpoch(1234567890));
+        expect(keyEvent.timestamp,
+            DateTime.fromMillisecondsSinceEpoch(1234567890),);
       });
 
       test('parses key up event correctly', () {
@@ -62,12 +63,14 @@ void main() {
 
         expect(event, isA<KeyEvent>());
         final keyEvent = event as KeyEvent;
-        expect(keyEvent.modifiers, containsAll([
-          KeyModifier.shift,
-          KeyModifier.control,
-          KeyModifier.alt,
-          KeyModifier.meta,
-        ]));
+        expect(
+            keyEvent.modifiers,
+            containsAll([
+              KeyModifier.shift,
+              KeyModifier.control,
+              KeyModifier.alt,
+              KeyModifier.meta,
+            ]),);
         expect(keyEvent.modifiers.length, 4);
       });
 
@@ -86,7 +89,8 @@ void main() {
         expect(mouseEvent.type, InputEventType.mouseMove);
         expect(mouseEvent.x, 100.5);
         expect(mouseEvent.y, 200.7);
-        expect(mouseEvent.timestamp, DateTime.fromMillisecondsSinceEpoch(1234567890));
+        expect(mouseEvent.timestamp,
+            DateTime.fromMillisecondsSinceEpoch(1234567890),);
       });
 
       test('parses mouse button down event correctly', () {
@@ -143,13 +147,10 @@ void main() {
           switch (button) {
             case 'left':
               expect(buttonEvent.button, MouseButton.left);
-              break;
             case 'right':
               expect(buttonEvent.button, MouseButton.right);
-              break;
             case 'middle':
               expect(buttonEvent.button, MouseButton.middle);
-              break;
           }
         }
       });
@@ -259,7 +260,7 @@ void main() {
         key: 'a',
         modifiers: {KeyModifier.shift, KeyModifier.control},
         isDown: true,
-        timestamp: DateTime(2024, 1, 1),
+        timestamp: DateTime(2024),
       );
 
       final str = event.toString();
@@ -275,7 +276,7 @@ void main() {
       final event = MouseMoveEvent(
         x: 123.4,
         y: 567.8,
-        timestamp: DateTime(2024, 1, 1),
+        timestamp: DateTime(2024),
       );
 
       final str = event.toString();
@@ -289,10 +290,10 @@ void main() {
     test('toString returns formatted string for button down', () {
       final event = MouseButtonEvent(
         button: MouseButton.left,
-        x: 100.0,
-        y: 200.0,
+        x: 100,
+        y: 200,
         isDown: true,
-        timestamp: DateTime(2024, 1, 1),
+        timestamp: DateTime(2024),
       );
 
       final str = event.toString();
@@ -304,10 +305,10 @@ void main() {
     test('toString returns formatted string for button up', () {
       final event = MouseButtonEvent(
         button: MouseButton.right,
-        x: 100.0,
-        y: 200.0,
+        x: 100,
+        y: 200,
         isDown: false,
-        timestamp: DateTime(2024, 1, 1),
+        timestamp: DateTime(2024),
       );
 
       final str = event.toString();
@@ -321,7 +322,7 @@ void main() {
       final event = MouseScrollEvent(
         deltaX: 1.5,
         deltaY: -2.3,
-        timestamp: DateTime(2024, 1, 1),
+        timestamp: DateTime(2024),
       );
 
       final str = event.toString();

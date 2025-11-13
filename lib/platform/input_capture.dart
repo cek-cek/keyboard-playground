@@ -1,16 +1,16 @@
-/// Platform channel interface for capturing keyboard and mouse input at the OS level.
+/// Platform channel interface for capturing keyboard and mouse input at the
+/// OS level.
 ///
-/// This class provides a high-level Dart API that communicates with platform-specific
-/// native code (Swift on macOS, C++ on Linux/Windows) to intercept all input events
-/// before they reach other applications.
+/// This class provides a high-level Dart API that communicates with
+/// platform-specific native code (Swift on macOS, C++ on Linux/Windows) to
+/// intercept all input events before they reach other applications.
 library;
 
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-
-import 'input_events.dart';
+import 'package:flutter/services.dart' hide KeyEvent;
+import 'package:keyboard_playground/platform/input_events.dart';
 
 /// Captures keyboard and mouse input at the OS level.
 ///
@@ -136,7 +136,8 @@ class InputCapture {
   /// Requests necessary permissions from the user.
   ///
   /// On macOS, this will show the system Accessibility permissions dialog.
-  /// On Linux, this may print instructions for adding the user to the input group.
+  /// On Linux, this may print instructions for adding the user to the input
+  /// group.
   /// On Windows, this may request administrator elevation.
   ///
   /// Returns `true` if permissions were granted, `false` otherwise.
@@ -166,9 +167,7 @@ class InputCapture {
         return KeyEvent(
           keyCode: map['keyCode'] as int,
           key: map['key'] as String,
-          modifiers: (map['modifiers'] as List)
-              .map(parseModifier)
-              .toSet(),
+          modifiers: (map['modifiers'] as List).map(parseModifier).toSet(),
           isDown: type == 'keyDown',
           timestamp: timestamp,
         );
