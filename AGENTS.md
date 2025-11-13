@@ -45,12 +45,34 @@ ls -la
 
 ### 4. Completing Work
 
-```bash
-# Final checks
-flutter analyze                    # Must pass with 0 issues
-flutter test --coverage           # Must maintain >90% coverage
-dart format --set-exit-if-changed .  # Must be formatted
+**⚠️ CRITICAL: Do NOT consider work complete until ALL checks pass!**
 
+Before committing your final changes, you **MUST** run these checks and ensure they all pass:
+
+```bash
+# 1. FORMATTING CHECK (must pass)
+dart format --set-exit-if-changed .
+# Exit code MUST be 0 (no changes needed)
+# If this fails, run: dart format .
+
+# 2. LINTING CHECK (must pass)
+flutter analyze --fatal-infos
+# Exit code MUST be 0 (no issues)
+# Fix all errors, warnings, and infos before proceeding
+
+# 3. TESTS CHECK (must pass)
+flutter test --coverage
+# Exit code MUST be 0 (all tests pass)
+# Coverage should be maintained or improved
+
+# 4. BUILD CHECK (if you modified platform code)
+flutter build linux --debug  # or macos/windows
+# Build MUST succeed without errors
+```
+
+**Only after ALL checks pass:**
+
+```bash
 # Commit and push
 git add .
 git commit -m "feat(prd-XXX): Complete [PRD title]"
@@ -60,6 +82,12 @@ git push -u origin feature/prd-XXX-short-description
 # Title: "PRD-XXX: [Title from PRD]"
 # Body: Link to PRD, summary of changes, test results
 ```
+
+**If ANY check fails:**
+- Fix the issues immediately
+- Re-run ALL checks
+- Do NOT commit until everything passes
+- CI failures mean the work is NOT complete
 
 ## Project Structure Understanding
 
