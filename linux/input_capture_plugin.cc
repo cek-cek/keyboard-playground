@@ -138,9 +138,17 @@ static void start_capture(InputCapturePlugin* self) {
   }
 
   // Start the recording thread
+  int ret = pthread_create(&self->record_thread, nullptr, record_thread_func, self);
+  if (ret != 0) {
+    g_print("InputCapture: Failed to create recording thread: %d\n", ret);
+    XRecordFreeContext(self->record_display, self->record_context);
+    XCloseDisplay(self->record_display);
+    self->record_display = nullptr;
+    self->record_context = 0;
+    return;
+  }
   self->is_capturing = true;
   self->thread_running = true;
-  pthread_create(&self->record_thread, nullptr, record_thread_func, self);
 
   g_print("InputCapture: Started successfully\n");
 }
