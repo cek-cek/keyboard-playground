@@ -1,6 +1,6 @@
 # Ensure Flutter is in PATH
 SHELL := /bin/bash
-export PATH := $(shell if [ -d /opt/flutter/bin ]; then echo /opt/flutter/bin:$(PATH); elif [ -d $(HOME)/flutter/bin ]; then echo $(HOME)/flutter/bin:$(PATH); else echo $(PATH); fi)
+export PATH := $(shell if [ -d /opt/flutter/bin ]; then echo /opt/flutter/bin:$$PATH; elif [ -d $(HOME)/flutter/bin ]; then echo $(HOME)/flutter/bin:$$PATH; else echo $$PATH; fi)
 
 .PHONY: help analyze format format-check test coverage build-macos build-linux build-windows clean ci setup
 
