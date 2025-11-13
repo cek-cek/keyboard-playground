@@ -352,8 +352,8 @@ LRESULT CALLBACK InputCapturePlugin::MouseHookProc(int nCode, WPARAM wParam, LPA
 
     instance_->SendEvent(event);
 
-    // Return -1 to prevent the event from being passed to the rest of the hook chain
-    return -1;
+    // Return 1 to prevent the event from being passed to the rest of the hook chain (per Windows API documentation)
+    return 1;
   }
 
   return CallNextHookEx(nullptr, nCode, wParam, lParam);
