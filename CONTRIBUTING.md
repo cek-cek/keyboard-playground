@@ -67,6 +67,51 @@ git commit -m "feat(prd-XXX): Description"
 git push -u origin feature/prd-XXX-description
 ```
 
+## Continuous Integration
+
+Our CI pipeline runs on every push and PR:
+
+- **Lint & Format**: Ensures code follows style guidelines
+- **Tests**: Runs all unit and widget tests
+- **Builds**: Verifies app builds on all platforms
+
+### Running CI Checks Locally
+
+```bash
+make ci  # Runs format-check, analyze, and test
+```
+
+Individual commands:
+```bash
+make format-check  # Check formatting
+make analyze       # Run static analysis
+make test          # Run all tests
+make coverage      # Generate coverage report
+```
+
+### CI Workflow Files
+
+- `.github/workflows/ci.yml`: Main CI pipeline
+- `.github/workflows/pr-checks.yml`: PR-specific checks
+
+### Build Matrix
+
+| Job | Platform | Trigger |
+|-----|----------|---------|
+| analyze | Ubuntu | Every push |
+| test | Ubuntu | Every push |
+| build-macos | macOS | Every push |
+| build-linux | Ubuntu | Every push |
+| build-windows | Windows | Main branch or labeled PR |
+
+### Quality Gates
+
+All PRs must pass:
+- Dart format check
+- Static analysis (no warnings or errors)
+- All tests (10% minimum coverage; goal is >90% as codebase matures)
+- Platform builds (macOS, Linux)
+
 ## Code Style
 
 - Follow [Effective Dart](https://dart.dev/guides/language/effective-dart)
@@ -79,7 +124,10 @@ git push -u origin feature/prd-XXX-description
 - Unit tests for business logic
 - Widget tests for UI components
 - Integration tests for end-to-end flows
-- Maintain >90% coverage
+- **Coverage Goal**: Aim for >90% coverage
+  - CI currently enforces 10% minimum for initial development
+  - Will gradually increase as the codebase matures
+  - New features should include comprehensive tests
 
 ## Commit Messages
 

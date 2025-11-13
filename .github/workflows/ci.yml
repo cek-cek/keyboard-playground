@@ -79,6 +79,7 @@ jobs:
     timeout-minutes: 30
     # Only run on main branch or when explicitly triggered
     if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'build-macos')
+
     steps:
       - uses: actions/checkout@v4
 
