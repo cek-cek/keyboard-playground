@@ -10,6 +10,7 @@ add_executable(${BINARY_NAME}
   "main.cc"
   "my_application.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
+  "${CMAKE_SOURCE_DIR}/input_capture_plugin.cc"
 )
 
 # Apply the standard set of build settings. This can be removed for applications
@@ -22,5 +23,10 @@ add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 # Add dependency libraries. Add any application-specific dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
+
+# X11 libraries for input capture
+find_package(X11 REQUIRED)
+target_link_libraries(${BINARY_NAME} PRIVATE ${X11_LIBRARIES} ${X11_Xrecord_LIB} pthread)
+target_include_directories(${BINARY_NAME} PRIVATE ${X11_INCLUDE_DIR})
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
