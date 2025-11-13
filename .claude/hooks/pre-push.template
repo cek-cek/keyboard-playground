@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Pre-push hook for keyboard-playground
 # Ensures all CI checks pass before pushing
 #
