@@ -272,9 +272,9 @@ LRESULT CALLBACK InputCapturePlugin::KeyboardHookProc(int nCode, WPARAM wParam, 
 
     instance_->SendEvent(event);
 
-    // Return -1 to prevent the event from being passed to the rest of the hook chain
+    // Return 1 to prevent the event from being passed to the rest of the hook chain
     // This creates the "sandbox" behavior
-    return -1;
+    return 1;
   }
 
   return CallNextHookEx(nullptr, nCode, wParam, lParam);
