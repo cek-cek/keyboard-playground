@@ -161,8 +161,8 @@ The core technical challenge is **system-level input capture** while maintaining
    - Cannot cross-compile: must build on native platforms
 
 5. **Deployment Considerations**
-   - macOS: Must notarize app, code signing required
-   - Windows: Code signing recommended, Microsoft SmartScreen issues without
+   - macOS: Notarization only for public distribution (FREE for local dev/testing)
+   - Windows: Code signing recommended for distribution, not required for development
    - Linux: Multiple distribution formats (AppImage, Flatpak, Snap)
 
 ### Mitigation Strategies

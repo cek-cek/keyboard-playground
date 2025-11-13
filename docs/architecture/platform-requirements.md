@@ -23,7 +23,7 @@ This document details the platform-specific requirements for implementing Keyboa
 | **Flutter Support** | ✅ Stable since 2021 | ✅ Stable since 2021 | ✅ Stable since Feb 2022 |
 | **Implementation Complexity** | Medium | High | Medium |
 | **Testing Difficulty** | Medium | High | Low |
-| **Distribution Complexity** | High (notarization required) | Medium (multiple formats) | Medium (signing recommended) |
+| **Distribution Complexity** | High (notarization for public distribution) | Medium (multiple formats) | Medium (signing recommended) |
 
 ## macOS Implementation Details
 
@@ -131,7 +131,63 @@ window.toggleFullScreen(nil)
 - **macOS SDK**: 10.15+
 - **Swift**: 5.5+
 - **CocoaPods**: For dependency management
-- **Developer Certificate**: For code signing (production)
+
+### Code Signing & Distribution
+
+#### For Development/Local Testing (No Cost)
+
+**You do NOT need:**
+- ❌ Apple Developer Program membership ($99/year)
+- ❌ Notarization
+- ❌ Distribution certificates
+
+**You CAN:**
+- ✅ Build and run locally on your Mac without any signing
+- ✅ Build and test in GitHub Actions (CI/CD)
+- ✅ Use ad-hoc signing (automatic, free)
+- ✅ Bypass Gatekeeper warnings with: `xattr -cr KeyboardPlayground.app`
+- ✅ Grant permissions (Accessibility, Input Monitoring) like any other app
+
+**Local Development Build:**
+```bash
+# Flutter automatically uses ad-hoc signing for debug builds
+flutter build macos --debug
+
+# Or release build with ad-hoc signing (no certificate needed)
+flutter build macos --release
+
+# If Gatekeeper complains, remove quarantine attribute
+xattr -cr build/macos/Build/Products/Release/KeyboardPlayground.app
+
+# Then open normally
+open build/macos/Build/Products/Release/KeyboardPlayground.app
+```
+
+**GitHub Actions CI/CD:**
+```yaml
+# No signing required for testing
+- name: Build macOS app
+  run: flutter build macos --release
+
+- name: Run tests
+  run: flutter test
+```
+
+#### For Public Distribution (Costs Apply)
+
+**Only needed if distributing to other users:**
+- Apple Developer Program: $99/year
+- Code signing certificate: Developer ID Application
+- Notarization: Required for macOS 10.15+ downloads
+
+**Why distribution needs notarization:**
+- Apps downloaded from internet trigger Gatekeeper
+- Notarization proves app was scanned by Apple for malware
+- Without it, users see scary warnings and must bypass security
+
+**For this project:**
+- Development/testing: **FREE, no notarization**
+- If you later distribute: Add notarization in PRD-014 (Accessibility & Polish)
 
 ---
 
@@ -483,14 +539,21 @@ Each platform requires:
 
 ## Distribution Requirements
 
-### macOS Distribution
+**Note**: This section is for **public distribution only**. For local development and testing, see platform-specific "Code Signing & Distribution" sections above.
+
+### macOS Distribution (Public)
 
 **Requirements:**
 - Apple Developer Program membership ($99/year)
-- Code signing certificate
-- App notarization (mandatory for macOS 10.15+)
+- Code signing certificate (Developer ID Application)
+- App notarization (mandatory for macOS 10.15+ when distributed via download)
 
-**Process:**
+**When NOT needed:**
+- ✅ Local development builds (use ad-hoc signing)
+- ✅ CI/CD testing (no signing required)
+- ✅ Running on your own Mac (just use `xattr -cr` if needed)
+
+**Process (if distributing to others):**
 ```bash
 # Sign app
 codesign --force --deep --sign "Developer ID Application: Your Name" YourApp.app

@@ -116,12 +116,21 @@ sudo xcodebuild -license accept
 flutter doctor
 ```
 
-#### Code Signing Requirements (Production)
+#### Code Signing Requirements
 
-- **Apple Developer Program**: $99/year
-- **Developer ID Application Certificate**: For distribution
+**For Development/Local Testing (FREE):**
+- ✅ No Apple Developer Program needed
+- ✅ No certificates required
+- ✅ Flutter uses ad-hoc signing automatically
+- ✅ Works locally and in GitHub Actions CI/CD
+
+**For Public Distribution Only:**
+- **Apple Developer Program**: $99/year (only if distributing to others)
+- **Developer ID Application Certificate**: For notarized distribution
 - **Developer ID Installer Certificate**: For .pkg creation
-- **Provisioning Profile**: For development builds
+- **App Notarization**: Required for downloads on macOS 10.15+
+
+**Note**: For this project, development and testing is completely FREE. Only pay if you decide to publicly distribute the app.
 
 ---
 
