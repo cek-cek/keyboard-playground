@@ -61,7 +61,7 @@ static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
   } else if (strcmp(method, "checkPermissions") == 0) {
     // On Linux, we check if X11 RECORD extension is available
-    int major, minor;
+    int major = 0, minor = 0;
     bool has_record = XRecordQueryVersion(self->display, &major, &minor);
 
     g_autoptr(FlValue) result = fl_value_new_map();
@@ -71,7 +71,7 @@ static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
   } else if (strcmp(method, "requestPermissions") == 0) {
     // On Linux, permissions are handled by the system
     // Just return true if RECORD extension is available
-    int major, minor;
+    int major = 0, minor = 0;
     bool has_record = XRecordQueryVersion(self->display, &major, &minor);
     g_autoptr(FlValue) result = fl_value_new_bool(has_record);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
