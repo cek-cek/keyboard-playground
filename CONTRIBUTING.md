@@ -109,7 +109,7 @@ make coverage      # Generate coverage report
 All PRs must pass:
 - Dart format check
 - Static analysis (no warnings or errors)
-- All tests (>90% coverage required)
+- All tests (10% minimum coverage; goal is >90% as codebase matures)
 - Platform builds (macOS, Linux)
 
 ## Code Style
@@ -124,7 +124,10 @@ All PRs must pass:
 - Unit tests for business logic
 - Widget tests for UI components
 - Integration tests for end-to-end flows
-- Maintain >90% coverage
+- **Coverage Goal**: Aim for >90% coverage
+  - CI currently enforces 10% minimum for initial development
+  - Will gradually increase as the codebase matures
+  - New features should include comprehensive tests
 
 ## Commit Messages
 

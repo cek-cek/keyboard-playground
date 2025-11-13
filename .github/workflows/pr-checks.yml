@@ -24,7 +24,7 @@ jobs:
             test
             chore
           scopes: |
-            prd-\d+
+            prd-*
             input
             games
             ui
