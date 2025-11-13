@@ -1,0 +1,44 @@
+#!/bin/bash
+# Pre-push hook for keyboard-playground
+# Ensures all CI checks pass before pushing
+#
+# This hook is automatically installed by .claude/setup.sh
+# To bypass this hook in emergencies, use: git push --no-verify
+
+set -e
+
+echo ""
+echo "🔍 Running pre-push checks..."
+echo ""
+
+# Ensure Flutter is in PATH
+if [ -d "/opt/flutter/bin" ]; then
+    export PATH="/opt/flutter/bin:$PATH"
+elif [ -d "$HOME/flutter/bin" ]; then
+    export PATH="$HOME/flutter/bin:$PATH"
+fi
+
+# Check if Flutter is available
+if ! command -v flutter &> /dev/null; then
+    echo "❌ Flutter not found. Run: make setup"
+    exit 1
+fi
+
+# Run CI checks (format-check, analyze, test)
+echo "Running: make ci"
+echo ""
+
+if make ci; then
+    echo ""
+    echo "✅ All pre-push checks passed! Proceeding with push..."
+    echo ""
+    exit 0
+else
+    echo ""
+    echo "❌ Pre-push checks failed!"
+    echo ""
+    echo "Please fix the issues above before pushing."
+    echo "Or use 'git push --no-verify' to skip this hook (not recommended)."
+    echo ""
+    exit 1
+fi

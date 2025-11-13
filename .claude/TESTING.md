@@ -96,6 +96,8 @@ This runs:
 - Static analysis with strict lints
 - All unit tests
 
+**IMPORTANT:** A pre-push git hook ensures `make ci` passes before every push. This prevents broken code from being pushed to the repository.
+
 ## For Claude Code Web Sessions
 
 The `.claude/hooks/SessionStart` hook automatically:
@@ -127,6 +129,26 @@ The Makefile is configured to automatically add Flutter to PATH, so all `make` c
    ```bash
    make ci
    ```
+
+6. **Commit and push your changes**
+   - The pre-push hook automatically runs `make ci` before allowing pushes
+   - This ensures code quality and prevents broken code from being pushed
+
+### Pre-Push Hook
+
+A git pre-push hook is installed that automatically runs `make ci` before every push. This ensures:
+- Code is properly formatted
+- Static analysis passes
+- All tests pass
+
+**The hook will block the push if any checks fail.**
+
+To bypass the hook in emergencies (not recommended):
+```bash
+git push --no-verify
+```
+
+The hook is automatically installed by `.claude/setup.sh` from `.claude/hooks/pre-push.template`.
 
 ## Test Structure
 
