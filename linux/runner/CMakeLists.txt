@@ -26,10 +26,11 @@ target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 
 # X11 libraries for input capture
 find_package(X11 REQUIRED)
-if(NOT X11_Xrecord_FOUND)
-  message(FATAL_ERROR "X11 Record extension not found. Install libxtst-dev")
+# Check for Xtst extension (includes XRecord for input capture)
+if(NOT X11_Xtst_FOUND)
+  message(FATAL_ERROR "X11 Xtst extension not found. Install libxtst-dev")
 endif()
-target_link_libraries(${BINARY_NAME} PRIVATE ${X11_LIBRARIES} ${X11_Xrecord_LIB} pthread)
+target_link_libraries(${BINARY_NAME} PRIVATE ${X11_LIBRARIES} ${X11_Xtst_LIB} pthread)
 target_include_directories(${BINARY_NAME} PRIVATE ${X11_INCLUDE_DIR})
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
