@@ -110,6 +110,17 @@ echo "📚 Getting Flutter dependencies..."
 cd /home/user/keyboard-playground
 flutter pub get
 
+# Install git hooks
+echo "🪝 Installing git hooks..."
+if [ -f ".claude/hooks/pre-push.template" ]; then
+    mkdir -p .git/hooks
+    cp .claude/hooks/pre-push.template .git/hooks/pre-push
+    chmod +x .git/hooks/pre-push
+    echo "✓ Pre-push hook installed (enforces 'make ci' before pushing)"
+else
+    echo "⚠️  Pre-push hook template not found"
+fi
+
 echo ""
 echo "✅ Setup complete! You can now:"
 echo "   • Run tests: make test"
@@ -117,4 +128,8 @@ echo "   • Run linter: make analyze"
 echo "   • Format code: make format"
 echo "   • Build Linux app: make build-linux"
 echo "   • Run all CI checks: make ci"
+echo ""
+echo "⚠️  IMPORTANT: Pre-push hook installed!"
+echo "   All git pushes will run 'make ci' automatically"
+echo "   Pushes are blocked if format, analyze, or tests fail"
 echo ""

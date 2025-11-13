@@ -1,4 +1,8 @@
-.PHONY: help analyze format format-check test coverage build-macos build-linux build-windows clean ci
+# Ensure Flutter is in PATH
+SHELL := /bin/bash
+export PATH := $(shell if [ -d /opt/flutter/bin ]; then echo /opt/flutter/bin:$$PATH; elif [ -d $(HOME)/flutter/bin ]; then echo $(HOME)/flutter/bin:$$PATH; else echo $$PATH; fi)
+
+.PHONY: help analyze format format-check test coverage build-macos build-linux build-windows clean ci setup
 
 help:
 	@echo "Keyboard Playground - Development Commands"
@@ -13,6 +17,10 @@ help:
 	@echo "  make build-windows - Build Windows app"
 	@echo "  make clean         - Clean build artifacts"
 	@echo "  make ci            - Run all CI checks locally"
+	@echo "  make setup         - Set up Flutter environment"
+
+setup:
+	@./.claude/setup.sh
 
 analyze:
 	flutter analyze --fatal-infos
