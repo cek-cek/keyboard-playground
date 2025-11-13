@@ -1,6 +1,6 @@
 # Keyboard Playground
 
-![CI Status](https://github.com/cek-cek/keyboard-playgroud/workflows/CI/badge.svg)
+![CI Status](https://github.com/cek-cek/keyboard-playground/workflows/CI/badge.svg)
 
 A safe, entertaining desktop application for young children to explore keyboard and mouse input without triggering system actions.
 
