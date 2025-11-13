@@ -332,7 +332,7 @@ LRESULT CALLBACK InputCapturePlugin::MouseHookProc(int nCode, WPARAM wParam, LPA
       case WM_MOUSEWHEEL:
       case WM_MOUSEHWHEEL: {
         event[flutter::EncodableValue("type")] = flutter::EncodableValue("mouseScroll");
-        short delta = GET_WHEEL_DELTA_WPARAM(ms->mouseData);
+        short delta = static_cast<short>(HIWORD(ms->mouseData));
         double normalized_delta = delta / 120.0;  // WHEEL_DELTA is 120
 
         if (wParam == WM_MOUSEWHEEL) {
