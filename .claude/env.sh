@@ -1,4 +1,4 @@
-#!/bin/bash
+# This file is intended to be sourced, not executed directly.
 # Environment setup for keyboard-playground
 # Source this file to add Flutter to your PATH: source .claude/env.sh
 
