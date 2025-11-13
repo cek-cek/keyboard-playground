@@ -113,6 +113,7 @@ flutter pub get
 # Install git hooks
 echo "🪝 Installing git hooks..."
 if [ -f ".claude/hooks/pre-push.template" ]; then
+    mkdir -p .git/hooks
     cp .claude/hooks/pre-push.template .git/hooks/pre-push
     chmod +x .git/hooks/pre-push
     echo "✓ Pre-push hook installed (enforces 'make ci' before pushing)"
