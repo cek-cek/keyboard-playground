@@ -79,8 +79,7 @@ class InputCapture {
     try {
       final result = await _methodChannel.invokeMethod<bool>('startCapture');
       return result ?? false;
-    } on PlatformException catch (e) {
-      print('Failed to start capture: ${e.message}');
+    } on PlatformException {
       return false;
     }
   }
@@ -95,8 +94,7 @@ class InputCapture {
     try {
       final result = await _methodChannel.invokeMethod<bool>('stopCapture');
       return result ?? false;
-    } on PlatformException catch (e) {
-      print('Failed to stop capture: ${e.message}');
+    } on PlatformException {
       return false;
     }
   }
@@ -106,8 +104,7 @@ class InputCapture {
     try {
       final result = await _methodChannel.invokeMethod<bool>('isCapturing');
       return result ?? false;
-    } on PlatformException catch (e) {
-      print('Failed to check capture status: ${e.message}');
+    } on PlatformException {
       return false;
     }
   }
@@ -125,8 +122,7 @@ class InputCapture {
         'checkPermissions',
       );
       return result ?? {};
-    } on PlatformException catch (e) {
-      print('Failed to check permissions: ${e.message}');
+    } on PlatformException {
       return {};
     }
   }
@@ -150,8 +146,7 @@ class InputCapture {
         'requestPermissions',
       );
       return result ?? false;
-    } on PlatformException catch (e) {
-      print('Failed to request permissions: ${e.message}');
+    } on PlatformException {
       return false;
     }
   }

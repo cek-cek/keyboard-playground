@@ -215,7 +215,7 @@ void main() {
 
       test('throws on unknown modifier', () {
         expect(
-          () => inputCapture._parseModifier('unknown'),
+          () => inputCapture.parseModifier('unknown'),
           throwsArgumentError,
         );
       });
