@@ -116,6 +116,8 @@ flutter test --reporter expanded
 - `.claude/env.sh` - New sourceable environment script
 - `.claude/TESTING.md` - New comprehensive testing guide
 - `.claude/hooks/SessionStart` - Enhanced with better guidance
+- `.claude/hooks/pre-push.template` - New pre-push hook template added
+- `.claude/setup.sh` - New setup script for environment initialization
 - `.claude/IMPROVEMENTS.md` - This document
 
 ## Result
