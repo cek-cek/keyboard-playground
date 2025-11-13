@@ -29,8 +29,10 @@ void main() {
         expect(keyEvent.key, 'a');
         expect(keyEvent.isDown, true);
         expect(keyEvent.modifiers, isEmpty);
-        expect(keyEvent.timestamp,
-            DateTime.fromMillisecondsSinceEpoch(1234567890),);
+        expect(
+          keyEvent.timestamp,
+          DateTime.fromMillisecondsSinceEpoch(1234567890),
+        );
       });
 
       test('parses key up event correctly', () {
@@ -64,13 +66,14 @@ void main() {
         expect(event, isA<KeyEvent>());
         final keyEvent = event as KeyEvent;
         expect(
-            keyEvent.modifiers,
-            containsAll([
-              KeyModifier.shift,
-              KeyModifier.control,
-              KeyModifier.alt,
-              KeyModifier.meta,
-            ]),);
+          keyEvent.modifiers,
+          containsAll([
+            KeyModifier.shift,
+            KeyModifier.control,
+            KeyModifier.alt,
+            KeyModifier.meta,
+          ]),
+        );
         expect(keyEvent.modifiers.length, 4);
       });
 
@@ -89,8 +92,10 @@ void main() {
         expect(mouseEvent.type, InputEventType.mouseMove);
         expect(mouseEvent.x, 100.5);
         expect(mouseEvent.y, 200.7);
-        expect(mouseEvent.timestamp,
-            DateTime.fromMillisecondsSinceEpoch(1234567890),);
+        expect(
+          mouseEvent.timestamp,
+          DateTime.fromMillisecondsSinceEpoch(1234567890),
+        );
       });
 
       test('parses mouse button down event correctly', () {

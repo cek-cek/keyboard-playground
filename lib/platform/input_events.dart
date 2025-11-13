@@ -97,9 +97,8 @@ class KeyEvent extends InputEvent {
 
   @override
   String toString() {
-    final modStr = modifiers.isEmpty
-        ? ''
-        : '${modifiers.map((m) => m.name).join('+')}+';
+    final modStr =
+        modifiers.isEmpty ? '' : '${modifiers.map((m) => m.name).join('+')}+';
     return 'KeyEvent(${isDown ? 'down' : 'up'}: $modStr$key, code: $keyCode)';
   }
 }
