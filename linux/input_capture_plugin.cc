@@ -118,6 +118,7 @@ static void start_capture(InputCapturePlugin* self) {
   if (!range) {
     g_print("InputCapture: Failed to allocate record range\n");
     XCloseDisplay(self->record_display);
+    self->record_display = nullptr;
     return;
   }
 
@@ -134,6 +135,7 @@ static void start_capture(InputCapturePlugin* self) {
   if (!self->record_context) {
     g_print("InputCapture: Failed to create record context\n");
     XCloseDisplay(self->record_display);
+    self->record_display = nullptr;
     return;
   }
 
