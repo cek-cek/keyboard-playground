@@ -35,7 +35,7 @@ class MouseVisualizerGame extends BaseGame {
   static const double _rippleStartSize = 20;
   static const double _rippleMaxSize = 220;
 
-  Offset _mousePosition;
+  Offset _mousePosition = Offset.zero;
   final List<_TrailPoint> _trail = [];
   final List<_ClickRipple> _ripples = [];
   final Map<events.MouseButton, bool> _buttonStates = {
