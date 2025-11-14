@@ -358,7 +358,7 @@ void main() {
         game.onKeyEvent(event1);
         await tester.pump();
 
-        expect(find.text('1 events'), findsOneWidget);
+        expect(find.text('1 event'), findsOneWidget);
 
         // Add second event
         final event2 = events.KeyEvent(
