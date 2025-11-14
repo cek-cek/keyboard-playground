@@ -11,6 +11,7 @@ add_executable(${BINARY_NAME}
   "my_application.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "${CMAKE_SOURCE_DIR}/input_capture_plugin.cc"
+  "${CMAKE_SOURCE_DIR}/window_control_plugin.cc"
 )
 
 # Apply the standard set of build settings. This can be removed for applications
