@@ -357,6 +357,9 @@ class MouseVisualizerGame extends BaseGame {
     if (_trail.length > _maxTrailPoints) {
       _trail.removeAt(0);
     }
+
+    // Restart ticker if it was stopped
+    _scheduleNextFrame();
   }
 
   void _handleMouseButton(events.MouseButtonEvent event) {
@@ -372,6 +375,9 @@ class MouseVisualizerGame extends BaseGame {
           timestamp: DateTime.now(),
         ),
       );
+
+      // Restart ticker if it was stopped
+      _scheduleNextFrame();
     }
   }
 
