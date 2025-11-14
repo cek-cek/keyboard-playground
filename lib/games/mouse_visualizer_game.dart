@@ -354,7 +354,7 @@ class MouseVisualizerGame extends BaseGame {
   }
 
   void _notifyUpdate() {
-    _updateNotifier.value++;
+    _updateNotifier.value = (_updateNotifier.value + 1) % 1000;
   }
 
   @override
