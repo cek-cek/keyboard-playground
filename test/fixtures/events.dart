@@ -39,9 +39,9 @@ class EventFixtures {
   /// Exit sequence (from PRD-005): Alt, Control, ArrowRight, Escape, q
   static List<InputEvent> get exitSequence {
     return [
-      EventBuilder.keyDown('Alt', modifiers: {KeyModifier.alt}),
+      EventBuilder.keyDown('Alt'),
       EventBuilder.keyUp('Alt'),
-      EventBuilder.keyDown('Control', modifiers: {KeyModifier.control}),
+      EventBuilder.keyDown('Control'),
       EventBuilder.keyUp('Control'),
       EventBuilder.keyDown('ArrowRight'),
       EventBuilder.keyUp('ArrowRight'),
@@ -103,6 +103,10 @@ class EventFixtures {
     double endY,
     int steps,
   ) {
+    if (steps < 2) {
+      // Return single point for steps < 2
+      return [EventBuilder.mouseMove(startX, startY)];
+    }
     return List.generate(steps, (i) {
       final t = i / (steps - 1);
       return EventBuilder.mouseMove(
