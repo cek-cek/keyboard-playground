@@ -22,20 +22,16 @@ import 'package:keyboard_playground/platform/input_events.dart' as events;
 class PlaceholderGame extends BaseGame {
   /// Creates a new placeholder game.
   PlaceholderGame() {
-    _eventsNotifier.value = [
+    _recentEvents.addAll([
       'Welcome to Keyboard Playground!',
       'Press any key or move the mouse to see events...',
       '',
       'Exit sequence: Alt + Ctrl + Right Arrow + Esc + Q',
-    ];
+    ]);
+    _eventsNotifier.value = List.from(_recentEvents);
   }
 
-  final List<String> _recentEvents = [
-    'Welcome to Keyboard Playground!',
-    'Press any key or move the mouse to see events...',
-    '',
-    'Exit sequence: Alt + Ctrl + Right Arrow + Esc + Q',
-  ];
+  final List<String> _recentEvents = [];
   final ValueNotifier<List<String>> _eventsNotifier =
       ValueNotifier<List<String>>([]);
 
