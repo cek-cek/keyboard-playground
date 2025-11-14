@@ -267,7 +267,7 @@ class KeyboardLayoutWidget extends StatelessWidget {
       KeyInfo('ControlLeft', width: 1.25, label: 'Ctrl'),
       KeyInfo('MetaLeft', width: 1.25, label: '⌘'),
       KeyInfo('AltLeft', width: 1.25, label: 'Alt'),
-      KeyInfo('Space', width: 6.25, label: 'Space'),
+      KeyInfo(' ', width: 6.25, label: 'Space'),
       KeyInfo('AltRight', width: 1.25, label: 'Alt'),
       KeyInfo('MetaRight', width: 1.25, label: '⌘'),
       KeyInfo('ContextMenu', width: 1.25, label: '☰'),
