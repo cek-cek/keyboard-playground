@@ -6,6 +6,7 @@ analyzer:
     - "**/*.freezed.dart"
     - "build/**"
     - "lib/generated_plugin_registrant.dart"
+    - "test/**"  # Exclude test files from strict style checking
 
   errors:
     # Treat all lints as errors
