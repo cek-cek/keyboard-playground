@@ -117,7 +117,7 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
         ..registerGame(PlaceholderGame())
         ..switchGame('placeholder');
 
-      // TODO(prd-009): Register additional games here
+      // TODO(PRD-009): Register additional games here
       // _gameManager.registerGame(ExplodingLettersGame());
       // _gameManager.registerGame(KeyboardVisualizerGame());
 
