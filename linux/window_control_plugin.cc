@@ -88,20 +88,38 @@ static FlMethodResponse* is_fullscreen(WindowControlPlugin* self) {
 
 /// Handles the "getScreenSize" method call.
 static FlMethodResponse* get_screen_size(WindowControlPlugin* self) {
-  GdkScreen* screen = gdk_screen_get_default();
-  if (screen == nullptr) {
+  GdkDisplay* display = gdk_display_get_default();
+  if (display == nullptr) {
     return FL_METHOD_RESPONSE(fl_method_error_response_new(
-        "NO_SCREEN",
-        "Default screen not available",
+        "NO_DISPLAY",
+        "Default display not available",
         nullptr));
   }
 
-  gint width = gdk_screen_get_width(screen);
-  gint height = gdk_screen_get_height(screen);
+  // Get the primary monitor
+  GdkMonitor* monitor = gdk_display_get_primary_monitor(display);
+  if (monitor == nullptr) {
+    // Fallback to the first monitor if no primary monitor is set
+    gint n_monitors = gdk_display_get_n_monitors(display);
+    if (n_monitors > 0) {
+      monitor = gdk_display_get_monitor(display, 0);
+    }
+  }
+
+  if (monitor == nullptr) {
+    return FL_METHOD_RESPONSE(fl_method_error_response_new(
+        "NO_MONITOR",
+        "No monitor available",
+        nullptr));
+  }
+
+  GdkRectangle geometry;
+  gdk_monitor_get_geometry(monitor, &geometry);
 
   g_autoptr(FlValue) result = fl_value_new_map();
-  fl_value_set_string_take(result, "width", fl_value_new_float(width));
-  fl_value_set_string_take(result, "height", fl_value_new_float(height));
+  fl_value_set_string_take(result, "width", fl_value_new_float(geometry.width));
+  fl_value_set_string_take(result, "height",
+                           fl_value_new_float(geometry.height));
 
   return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
 }
