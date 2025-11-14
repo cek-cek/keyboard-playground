@@ -427,7 +427,8 @@ class KeyWidget extends StatelessWidget {
           child: Text(
             keyInfo.displayLabel,
             style: TextStyle(
-              fontSize: keyInfo.width > 1.5 ? 12 : 14,
+              // Use a smaller font for longer labels to ensure they fit within the key.
+              fontSize: keyInfo.displayLabel.length > 5 ? 12 : 14,
               fontWeight: isPressed ? FontWeight.bold : FontWeight.w500,
               color: isPressed ? Colors.white : Colors.white70,
             ),
