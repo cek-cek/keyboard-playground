@@ -149,21 +149,37 @@ class GameManager {
   ///
   /// Does nothing if no game is currently active.
   void handleKeyEvent(KeyEvent event) {
-    _currentGame?.onKeyEvent(/* event */);
+    _currentGame?.onKeyEvent(event);
   }
 
   /// Forwards a mouse button event to the current game.
   ///
   /// Does nothing if no game is currently active.
   void handleMouseButtonEvent(MouseButtonEvent event) {
-    _currentGame?.onMouseEvent(/* event */);
+    _currentGame?.onMouseEvent(event);
   }
 
   /// Forwards a mouse move event to the current game.
   ///
   /// Does nothing if no game is currently active.
   void handleMouseMoveEvent(MouseMoveEvent event) {
-    _currentGame?.onMouseEvent(/* event */);
+    _currentGame?.onMouseEvent(event);
+  }
+
+  /// Forwards any input event to the current game.
+  ///
+  /// This is a convenience method that handles all event types.
+  /// Does nothing if no game is currently active.
+  void handleInputEvent(InputEvent event) {
+    if (event is KeyEvent) {
+      handleKeyEvent(event);
+    } else if (event is MouseButtonEvent) {
+      handleMouseButtonEvent(event);
+    } else if (event is MouseMoveEvent) {
+      handleMouseMoveEvent(event);
+    } else if (event is MouseScrollEvent) {
+      _currentGame?.onMouseEvent(event);
+    }
   }
 
   /// Disposes of all resources used by the game manager.

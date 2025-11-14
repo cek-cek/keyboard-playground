@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:keyboard_playground/platform/input_events.dart' as events;
 
 /// Base interface for all games in Keyboard Playground.
 ///
@@ -20,16 +21,18 @@ abstract class BaseGame {
 
   /// Called when a keyboard event occurs.
   ///
-  /// This will be implemented in PRD-004 with proper event types.
-  void onKeyEvent(/* KeyEvent event */) {
-    // TODO(PRD-004): Implement with proper event type
+  /// [event] contains information about the key press/release and modifiers.
+  void onKeyEvent(events.KeyEvent event) {
+    // Default implementation does nothing
+    // Games can override to handle keyboard input
   }
 
   /// Called when a mouse event occurs.
   ///
-  /// This will be implemented in PRD-004 with proper event types.
-  void onMouseEvent(/* MouseEvent event */) {
-    // TODO(PRD-004): Implement with proper event type
+  /// [event] can be a mouse move, button, or scroll event.
+  void onMouseEvent(events.InputEvent event) {
+    // Default implementation does nothing
+    // Games can override to handle mouse input
   }
 
   /// Called when the game is being disposed.
