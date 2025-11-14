@@ -10,6 +10,7 @@ library;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:keyboard_playground/games/base_game.dart';
 import 'package:keyboard_playground/platform/input_events.dart' as events;
 
@@ -21,14 +22,27 @@ class ExplodingLettersGame extends BaseGame {
   /// Creates a new exploding letters game.
   ExplodingLettersGame() {
     // Start the animation ticker
-    _ticker = Ticker(_updateAnimations)..start();
+    _scheduleNextFrame();
   }
+
+  /// Animation duration in milliseconds (3 seconds).
+  static const int animationDurationMs = 3000;
+
+  /// Letter visibility threshold (first 20% of animation).
+  static const double letterVisibilityThreshold = 0.2;
+
+  /// Letter opacity fade rate multiplier.
+  static const int letterFadeRate = 5;
+
+  /// Letter scale growth rate multiplier.
+  static const int letterScaleRate = 2;
 
   final List<LetterEntity> _activeLetters = [];
   final Random _random = Random();
   final ValueNotifier<int> _updateNotifier = ValueNotifier<int>(0);
 
-  late final Ticker _ticker;
+  bool _isScheduled = false;
+  Size _screenSize = const Size(1920, 1080); // Default, updated from layout
 
   @override
   String get id => 'exploding_letters';
@@ -52,14 +66,23 @@ class ExplodingLettersGame extends BaseGame {
           ],
         ),
       ),
-      child: ValueListenableBuilder<int>(
-        valueListenable: _updateNotifier,
-        builder: (context, _, __) {
-          return CustomPaint(
-            painter: ExplodingLettersPainter(
-              letters: _activeLetters,
-            ),
-            size: Size.infinite,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Update screen size from actual layout constraints
+          if (constraints.maxWidth.isFinite && constraints.maxHeight.isFinite) {
+            _screenSize = Size(constraints.maxWidth, constraints.maxHeight);
+          }
+
+          return ValueListenableBuilder<int>(
+            valueListenable: _updateNotifier,
+            builder: (context, _, __) {
+              return CustomPaint(
+                painter: ExplodingLettersPainter(
+                  letters: _activeLetters,
+                ),
+                size: Size.infinite,
+              );
+            },
           );
         },
       ),
@@ -87,10 +110,7 @@ class ExplodingLettersGame extends BaseGame {
 
     _activeLetters.add(letter);
 
-    // Remove after animation completes (3 seconds)
-    Future<void>.delayed(const Duration(seconds: 3), () {
-      _activeLetters.remove(letter);
-    });
+    // Cleanup happens in _updateAnimations via removeWhere
   }
 
   /// Checks if a key is a modifier key.
@@ -136,15 +156,14 @@ class ExplodingLettersGame extends BaseGame {
 
   /// Generates a random position for a letter.
   Offset _randomPosition() {
-    // We'll use a reasonable screen size assumption
-    // The actual screen size will be provided by the painter
-    const width = 1920.0;
-    const height = 1080.0;
+    // Use actual screen size from layout
+    final width = _screenSize.width;
+    final height = _screenSize.height;
     const margin = 100.0;
 
     return Offset(
-      margin + _random.nextDouble() * (width - 2 * margin),
-      margin + _random.nextDouble() * (height - 2 * margin),
+      margin + _random.nextDouble() * (width - 2 * margin).clamp(0, width),
+      margin + _random.nextDouble() * (height - 2 * margin).clamp(0, height),
     );
   }
 
@@ -166,18 +185,32 @@ class ExplodingLettersGame extends BaseGame {
     return colors[_random.nextInt(colors.length)];
   }
 
+  /// Schedules the next animation frame.
+  void _scheduleNextFrame() {
+    if (_disposed || _isScheduled) return;
+    _isScheduled = true;
+    SchedulerBinding.instance.scheduleFrameCallback((timeStamp) {
+      _isScheduled = false;
+      if (!_disposed && _activeLetters.isNotEmpty) {
+        _updateAnimations();
+        _scheduleNextFrame();
+      }
+    });
+  }
+
   /// Updates all active animations.
-  void _updateAnimations(Duration elapsed) {
+  void _updateAnimations() {
     if (_activeLetters.isEmpty) return;
+
+    // Clean up old letters (single cleanup mechanism)
+    final now = DateTime.now();
+    _activeLetters.removeWhere((letter) {
+      final age = now.difference(letter.createdAt).inMilliseconds;
+      return age > animationDurationMs;
+    });
 
     // Notify listeners to repaint
     _updateNotifier.value++;
-
-    // Clean up old letters
-    _activeLetters.removeWhere((letter) {
-      final age = DateTime.now().difference(letter.createdAt).inMilliseconds;
-      return age > 3000; // 3 seconds
-    });
   }
 
   bool _disposed = false;
@@ -187,7 +220,6 @@ class ExplodingLettersGame extends BaseGame {
     if (_disposed) return;
     _disposed = true;
 
-    _ticker.dispose();
     _updateNotifier.dispose();
     super.dispose();
   }
@@ -195,6 +227,12 @@ class ExplodingLettersGame extends BaseGame {
   /// Gets the count of active letters (for testing).
   @visibleForTesting
   int get activeLettersCount => _activeLetters.length;
+
+  /// Manually triggers animation cleanup (for testing).
+  @visibleForTesting
+  void cleanupOldLetters() {
+    _updateAnimations();
+  }
 }
 
 /// Represents a single letter entity with its explosion animation.
@@ -243,10 +281,48 @@ class LetterEntity {
   /// Particles for the explosion effect.
   final List<Particle> particles = [];
 
+  /// Cached TextPainter for rendering performance.
+  TextPainter? _cachedTextPainter;
+
+  /// Gets or creates the cached TextPainter for this letter.
+  TextPainter getTextPainter(double scale, double opacity) {
+    // Recreate if scale or opacity changed significantly
+    final needsRecreate = _cachedTextPainter == null;
+
+    if (needsRecreate) {
+      _cachedTextPainter = TextPainter(
+        text: TextSpan(
+          text: character,
+          style: TextStyle(
+            fontSize: 72 * scale,
+            fontWeight: FontWeight.bold,
+            color: color.withOpacity(opacity),
+            letterSpacing: 2,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+    } else {
+      // Update existing painter's text style
+      _cachedTextPainter!.text = TextSpan(
+        text: character,
+        style: TextStyle(
+          fontSize: 72 * scale,
+          fontWeight: FontWeight.bold,
+          color: color.withOpacity(opacity),
+          letterSpacing: 2,
+        ),
+      );
+      _cachedTextPainter!.layout();
+    }
+
+    return _cachedTextPainter!;
+  }
+
   /// Gets the progress of the animation (0.0 to 1.0).
   double getProgress() {
     final age = DateTime.now().difference(createdAt).inMilliseconds;
-    return (age / 3000.0).clamp(0.0, 1.0);
+    return (age / ExplodingLettersGame.animationDurationMs).clamp(0.0, 1.0);
   }
 }
 
@@ -294,7 +370,8 @@ class Particle {
   /// Gets the opacity of the particle based on age (fades out).
   double getOpacity() {
     final age = DateTime.now().difference(createdAt).inMilliseconds;
-    final progress = (age / 3000.0).clamp(0.0, 1.0);
+    final progress =
+        (age / ExplodingLettersGame.animationDurationMs).clamp(0.0, 1.0);
 
     // Fade out over time
     return (1.0 - progress).clamp(0.0, 1.0);
@@ -316,8 +393,8 @@ class ExplodingLettersPainter extends CustomPainter {
     for (final letter in letters) {
       final progress = letter.getProgress();
 
-      // Draw the letter (visible for first 20% of animation)
-      if (progress < 0.2) {
+      // Draw the letter (visible for first portion of animation)
+      if (progress < ExplodingLettersGame.letterVisibilityThreshold) {
         _drawLetter(canvas, letter, progress);
       }
 
@@ -329,23 +406,14 @@ class ExplodingLettersPainter extends CustomPainter {
   /// Draws a letter.
   void _drawLetter(Canvas canvas, LetterEntity letter, double progress) {
     // Calculate letter opacity (fades out quickly)
-    final opacity = (1.0 - progress * 5).clamp(0.0, 1.0);
+    final opacity =
+        (1.0 - progress * ExplodingLettersGame.letterFadeRate).clamp(0.0, 1.0);
 
     // Calculate letter scale (grows slightly before disappearing)
-    final scale = 1 + progress * 2;
+    final scale = 1 + progress * ExplodingLettersGame.letterScaleRate;
 
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: letter.character,
-        style: TextStyle(
-          fontSize: 72 * scale,
-          fontWeight: FontWeight.bold,
-          color: letter.color.withOpacity(opacity),
-          letterSpacing: 2,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    // Use cached TextPainter for better performance
+    final textPainter = letter.getTextPainter(scale, opacity);
 
     // Draw letter centered at position
     textPainter.paint(
@@ -378,46 +446,5 @@ class ExplodingLettersPainter extends CustomPainter {
   bool shouldRepaint(ExplodingLettersPainter oldDelegate) {
     // Always repaint to show animation updates
     return true;
-  }
-}
-
-/// Simple ticker implementation for animation updates.
-class Ticker {
-  /// Creates a new ticker.
-  Ticker(this.onTick);
-
-  /// Callback for each tick.
-  final void Function(Duration elapsed) onTick;
-
-  bool _active = false;
-  late DateTime _startTime;
-
-  /// Starts the ticker.
-  void start() {
-    if (_active) return;
-
-    _active = true;
-    _startTime = DateTime.now();
-    _tick();
-  }
-
-  /// Stops the ticker.
-  void stop() {
-    _active = false;
-  }
-
-  /// Disposes of the ticker.
-  void dispose() {
-    stop();
-  }
-
-  void _tick() {
-    if (!_active) return;
-
-    final elapsed = DateTime.now().difference(_startTime);
-    onTick(elapsed);
-
-    // Schedule next tick
-    Future<void>.delayed(const Duration(milliseconds: 16), _tick);
   }
 }
