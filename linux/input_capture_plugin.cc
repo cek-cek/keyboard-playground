@@ -61,7 +61,7 @@ static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
   } else if (strcmp(method, "checkPermissions") == 0) {
     // On Linux, we check if X11 RECORD extension is available
-    int major, minor;
+    int major = 0, minor = 0;
     bool has_record = XRecordQueryVersion(self->display, &major, &minor);
 
     g_autoptr(FlValue) result = fl_value_new_map();
@@ -71,7 +71,7 @@ static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
   } else if (strcmp(method, "requestPermissions") == 0) {
     // On Linux, permissions are handled by the system
     // Just return true if RECORD extension is available
-    int major, minor;
+    int major = 0, minor = 0;
     bool has_record = XRecordQueryVersion(self->display, &major, &minor);
     g_autoptr(FlValue) result = fl_value_new_bool(has_record);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
@@ -102,6 +102,7 @@ static void start_capture(InputCapturePlugin* self) {
   if (!range) {
     g_print("InputCapture: Failed to allocate record range\n");
     XCloseDisplay(self->record_display);
+    self->record_display = nullptr;
     return;
   }
 
@@ -140,9 +141,9 @@ static void stop_capture(InputCapturePlugin* self) {
   self->thread_running = false;
 
   // Disable the record context
-  if (self->record_context) {
-    XRecordDisableContext(self->display, self->record_context);
-    XRecordFreeContext(self->display, self->record_context);
+  if (self->record_context && self->record_display) {
+    XRecordDisableContext(self->record_display, self->record_context);
+    XRecordFreeContext(self->record_display, self->record_context);
     self->record_context = 0;
   }
 
@@ -293,7 +294,7 @@ static void send_event_to_dart(InputCapturePlugin* self, FlValue* event_data) {
 static const char* keycode_to_string(KeySym keysym) {
   // Common printable characters
   if (keysym >= XK_space && keysym <= XK_asciitilde) {
-    static char buf[2];
+    thread_local char buf[2];
     buf[0] = (char)keysym;
     buf[1] = '\0';
     return buf;
@@ -333,9 +334,9 @@ static const char* keycode_to_string(KeySym keysym) {
     case XK_Alt_L:
     case XK_Alt_R: return "Alt";
     case XK_Super_L:
-    case XK_Super_R: return "Super";
+    case XK_Super_R: return "Meta";
     default:
-      static char fallback[32];
+      thread_local char fallback[32];
       snprintf(fallback, sizeof(fallback), "Key%lu", keysym);
       return fallback;
   }
