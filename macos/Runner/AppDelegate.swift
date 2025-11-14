@@ -18,5 +18,10 @@ class AppDelegate: FlutterAppDelegate {
     InputCapturePlugin.register(
       with: controller.registrar(forPlugin: "InputCapturePlugin")
     )
+
+    // Register the window control plugin
+    WindowControlPlugin.register(
+      with: controller.registrar(forPlugin: "WindowControlPlugin")
+    )
   }
 }

@@ -7,6 +7,7 @@
 
 #include "flutter/generated_plugin_registrant.h"
 #include "input_capture_plugin.h"
+#include "window_control_plugin.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -63,6 +64,10 @@ static void my_application_activate(GApplication* application) {
   // Register custom input capture plugin
   input_capture_plugin_register_with_registrar(
       fl_plugin_registry_get_registrar_for_plugin(FL_PLUGIN_REGISTRY(view), "InputCapturePlugin"));
+
+  // Register custom window control plugin
+  window_control_plugin_register_with_registrar(
+      fl_plugin_registry_get_registrar_for_plugin(FL_PLUGIN_REGISTRY(view), "WindowControlPlugin"));
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
