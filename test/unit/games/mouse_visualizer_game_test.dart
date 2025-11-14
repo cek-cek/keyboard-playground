@@ -14,7 +14,12 @@ void main() {
     });
 
     tearDown(() {
-      game.dispose();
+      // Only dispose if not already disposed (testWidgets dispose explicitly)
+      try {
+        game.dispose();
+      } catch (_) {
+        // Already disposed, ignore
+      }
     });
 
     group('Basic Properties', () {
@@ -51,6 +56,10 @@ void main() {
 
         // Widget should rebuild (verify by pumping)
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('tracks trail of mouse movements', (tester) async {
@@ -68,6 +77,10 @@ void main() {
 
         // Verify no exceptions occurred
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('limits trail to 30 points', (tester) async {
@@ -85,6 +98,10 @@ void main() {
 
         // Verify no exceptions occurred (trail should be limited internally)
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -105,6 +122,10 @@ void main() {
         await tester.pump();
 
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('handles right button click', (tester) async {
@@ -129,6 +150,10 @@ void main() {
         await tester.pump();
 
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('handles middle button click', (tester) async {
@@ -153,6 +178,10 @@ void main() {
         await tester.pump();
 
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('creates ripple on button down', (tester) async {
@@ -169,6 +198,10 @@ void main() {
         // Pump again to let ripple animate
         await tester.pump(const Duration(milliseconds: 100));
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('handles multiple simultaneous button presses',
@@ -212,6 +245,10 @@ void main() {
         await tester.pump();
 
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -228,6 +265,10 @@ void main() {
           await tester.pump(const Duration(milliseconds: 100));
           expect(tester.takeException(), isNull);
         }
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('multiple ripples can exist simultaneously', (tester) async {
@@ -248,6 +289,10 @@ void main() {
         // Animate ripples
         await tester.pump(const Duration(milliseconds: 500));
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('old ripples are removed', (tester) async {
@@ -265,6 +310,10 @@ void main() {
         game.onMouseEvent(EventBuilder.mouseMove(350, 450));
         await tester.pump();
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -277,6 +326,10 @@ void main() {
         expect(find.text('LEFT'), findsOneWidget);
         expect(find.text('RIGHT'), findsOneWidget);
         expect(find.text('MIDDLE'), findsOneWidget);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('button states update on press and release', (tester) async {
@@ -292,6 +345,10 @@ void main() {
         game.onMouseEvent(EventBuilder.mouseUp(100, 100));
         await tester.pump();
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -312,6 +369,10 @@ void main() {
 
         expect(tester.takeException(), isNull);
         expect(find.byType(Container), findsWidgets);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('shows instructions', (tester) async {
@@ -326,6 +387,10 @@ void main() {
           find.text('Click to create ripple effects'),
           findsOneWidget,
         );
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('updates UI when events occur', (tester) async {
@@ -343,6 +408,10 @@ void main() {
         // UI should still be valid
         expect(find.byType(Stack), findsOneWidget);
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -362,6 +431,10 @@ void main() {
         await tester.pump();
 
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -384,6 +457,10 @@ void main() {
           await tester.pump();
           expect(tester.takeException(), isNull);
         }
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('handles rapid mouse movements', (tester) async {
@@ -396,6 +473,10 @@ void main() {
 
         await tester.pump();
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
 
       testWidgets('handles rapid clicking', (tester) async {
@@ -409,6 +490,10 @@ void main() {
 
         await tester.pump();
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -428,6 +513,10 @@ void main() {
 
         // Should not cause errors
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
 
@@ -468,6 +557,10 @@ void main() {
         await tester.pump();
 
         expect(tester.takeException(), isNull);
+
+        // Dispose game before widget tree teardown
+        game.dispose();
+        await tester.pump();
       });
     });
   });

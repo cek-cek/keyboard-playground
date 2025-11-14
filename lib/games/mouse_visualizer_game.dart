@@ -7,8 +7,9 @@
 /// - Button state indicators (L/R/M) showing which buttons are pressed
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:keyboard_playground/games/base_game.dart';
 import 'package:keyboard_playground/platform/input_events.dart' as events;
 
@@ -24,7 +25,7 @@ class MouseVisualizerGame extends BaseGame {
   MouseVisualizerGame() {
     // Initialize with center position
     _mousePosition = const Offset(960, 540); // Default to 1920x1080 center
-    _startAnimationTicker();
+    // Animation ticker will start automatically when first event is received
   }
 
   // Animation constants
@@ -46,7 +47,7 @@ class MouseVisualizerGame extends BaseGame {
 
   final ValueNotifier<int> _updateNotifier = ValueNotifier<int>(0);
   bool _disposed = false;
-  bool _isScheduled = false;
+  Timer? _animationTimer;
 
   @override
   String get id => 'mouse_visualizer';
@@ -58,22 +59,26 @@ class MouseVisualizerGame extends BaseGame {
   String get description =>
       'Real-time visualization of mouse position and button states';
 
-  /// Starts the animation ticker for smooth 60 FPS updates.
-  void _startAnimationTicker() {
-    _scheduleNextFrame();
-  }
-
-  /// Schedules the next animation frame.
+  /// Schedules the next animation frame using a timer.
   void _scheduleNextFrame() {
-    if (_disposed || _isScheduled) return;
+    if (_disposed || _animationTimer != null) return;
 
-    _isScheduled = true;
-    SchedulerBinding.instance.scheduleFrameCallback((timeStamp) {
-      _isScheduled = false;
-      if (!_disposed && (_trail.isNotEmpty || _ripples.isNotEmpty)) {
-        _notifyUpdate();
-        _scheduleNextFrame();
+    // Use a periodic timer for animations (~60 FPS = ~16ms)
+    _animationTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (_disposed) {
+        timer.cancel();
+        _animationTimer = null;
+        return;
       }
+
+      // Stop animation if no active elements
+      if (_trail.isEmpty && _ripples.isEmpty) {
+        timer.cancel();
+        _animationTimer = null;
+        return;
+      }
+
+      _notifyUpdate();
     });
   }
 
@@ -401,6 +406,12 @@ class MouseVisualizerGame extends BaseGame {
   @override
   void dispose() {
     _disposed = true;
+    // Cancel animation timer
+    _animationTimer?.cancel();
+    _animationTimer = null;
+    // Clear all animation state
+    _trail.clear();
+    _ripples.clear();
     _updateNotifier.dispose();
     super.dispose();
   }
