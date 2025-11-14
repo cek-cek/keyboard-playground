@@ -3,6 +3,7 @@
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
 #include <X11/Xlib.h>
+#include <X11/XKBlib.h>
 #include <X11/extensions/record.h>
 #include <X11/keysym.h>
 #include <pthread.h>
@@ -20,7 +21,6 @@ struct _InputCapturePlugin {
 
   FlMethodChannel* method_channel;
   FlEventChannel* event_channel;
-  FlEventChannelHandler* event_handler;
 
   Display* display;
   Display* record_display;
@@ -80,22 +80,6 @@ static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
   }
 
   fl_method_call_respond(method_call, response, nullptr);
-}
-
-// Event channel listen callback
-static FlMethodErrorResponse* listen_cb(FlEventChannel* channel,
-                                       FlValue* args,
-                                       gpointer user_data) {
-  g_print("InputCapture: Event stream listener attached\n");
-  return nullptr;
-}
-
-// Event channel cancel callback
-static FlMethodErrorResponse* cancel_cb(FlEventChannel* channel,
-                                       FlValue* args,
-                                       gpointer user_data) {
-  g_print("InputCapture: Event stream listener detached\n");
-  return nullptr;
 }
 
 // Start capturing input
@@ -214,8 +198,8 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
       unsigned char keycode = event_data[1];
       fl_value_set_string_take(event_map, "keyCode", fl_value_new_int(keycode));
 
-      // Convert keycode to keysym
-      KeySym keysym = XKeycodeToKeysym(self->display, keycode, 0);
+      // Convert keycode to keysym (using XKB version to avoid deprecation)
+      KeySym keysym = XkbKeycodeToKeysym(self->display, keycode, 0, 0);
       const char* key_string = keycode_to_string(keysym);
       fl_value_set_string_take(event_map, "key", fl_value_new_string(key_string));
 
@@ -242,28 +226,16 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
 
     case ButtonPress:
     case ButtonRelease: {
-      fl_value_set_string_take(event_map, "type",
-                              fl_value_new_string(event_type == ButtonPress ? "mouseDown" : "mouseUp"));
-
       // Extract button number (byte 1)
       unsigned char button = event_data[1];
-      const char* button_name = "other";
-      if (button == 1) button_name = "left";
-      else if (button == 2) button_name = "middle";
-      else if (button == 3) button_name = "right";
-
-      fl_value_set_string_take(event_map, "button", fl_value_new_string(button_name));
 
       // Extract position (bytes 24-27 for x, 28-31 for y - root coordinates)
       int16_t x = *(int16_t*)(event_data + 24);
       int16_t y = *(int16_t*)(event_data + 26);
-      fl_value_set_string_take(event_map, "x", fl_value_new_float(x));
-      fl_value_set_string_take(event_map, "y", fl_value_new_float(y));
 
       // Handle scroll wheel (buttons 4, 5 for vertical, 6, 7 for horizontal)
-      if (button >= 4 && button <= 7) {
+      if (button >= 4 && button <= 7 && event_type == ButtonPress) {
         fl_value_set_string_take(event_map, "type", fl_value_new_string("mouseScroll"));
-        fl_value_remove(event_map, fl_value_new_string("button"));
 
         double deltaX = 0.0;
         double deltaY = 0.0;
@@ -274,6 +246,19 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
 
         fl_value_set_string_take(event_map, "deltaX", fl_value_new_float(deltaX));
         fl_value_set_string_take(event_map, "deltaY", fl_value_new_float(deltaY));
+      } else {
+        // Regular mouse button event
+        fl_value_set_string_take(event_map, "type",
+                                fl_value_new_string(event_type == ButtonPress ? "mouseDown" : "mouseUp"));
+
+        const char* button_name = "other";
+        if (button == 1) button_name = "left";
+        else if (button == 2) button_name = "middle";
+        else if (button == 3) button_name = "right";
+
+        fl_value_set_string_take(event_map, "button", fl_value_new_string(button_name));
+        fl_value_set_string_take(event_map, "x", fl_value_new_float(x));
+        fl_value_set_string_take(event_map, "y", fl_value_new_float(y));
       }
 
       send_event_to_dart(self, event_map);
@@ -299,7 +284,7 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
 
 // Send event to Dart via event channel
 static void send_event_to_dart(InputCapturePlugin* self, FlValue* event_data) {
-  if (self->event_handler) {
+  if (self->event_channel) {
     fl_event_channel_send(self->event_channel, event_data, nullptr, nullptr);
   }
 }
@@ -403,10 +388,6 @@ void input_capture_plugin_register_with_registrar(FlPluginRegistrar* registrar) 
       fl_plugin_registrar_get_messenger(registrar),
       "com.keyboardplayground/input_events",
       FL_METHOD_CODEC(codec));
-  plugin->event_handler = fl_event_channel_handler_new(
-      listen_cb, cancel_cb, plugin, nullptr);
-  fl_event_channel_set_stream_handler(plugin->event_channel,
-                                     plugin->event_handler);
 
   g_object_unref(plugin);
 }
