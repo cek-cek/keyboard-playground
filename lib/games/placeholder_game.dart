@@ -131,7 +131,8 @@ class PlaceholderGame extends BaseGame {
                           ),
                           const SizedBox(width: 16),
                           Text(
-                            '${events.length} events',
+                            '${events.length} '
+                            '${events.length == 1 ? "event" : "events"}',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.white54,
