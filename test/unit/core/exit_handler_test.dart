@@ -466,7 +466,7 @@ void main() {
       });
 
       test('uses threshold correctly', () async {
-        // Just inside threshold (49px from corner)
+        // Just inside threshold (49px in both x and y from top-left corner)
         mockInput.simulateMouseEvent(
           MouseButtonEvent(
             button: MouseButton.left,
