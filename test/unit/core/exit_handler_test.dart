@@ -485,7 +485,7 @@ void main() {
           inputCapture: mockInput,
         );
 
-        // Just outside threshold (51px from corner) - should not advance
+        // Just outside threshold (51px in both x and y from top-left corner) - should not advance
         mockInput.simulateMouseEvent(
           MouseButtonEvent(
             button: MouseButton.left,
