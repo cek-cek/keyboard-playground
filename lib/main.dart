@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:keyboard_playground/core/exit_handler.dart';
 import 'package:keyboard_playground/core/game_manager.dart';
+import 'package:keyboard_playground/games/exploding_letters/exploding_letters_game.dart';
 import 'package:keyboard_playground/games/placeholder_game.dart';
 import 'package:keyboard_playground/platform/input_capture.dart';
 import 'package:keyboard_playground/platform/window_control.dart';
@@ -115,11 +116,12 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
       debugPrint('Step 6: Registering games...');
       _gameManager
         ..registerGame(PlaceholderGame())
-        ..switchGame('placeholder');
+        ..registerGame(ExplodingLettersGame())
+        ..switchGame('exploding_letters');
 
-      // TODO(PRD-009): Register additional games here
-      // _gameManager.registerGame(ExplodingLettersGame());
+      // Future games will be registered here (PRD-010, PRD-011):
       // _gameManager.registerGame(KeyboardVisualizerGame());
+      // _gameManager.registerGame(MouseVisualizerGame());
 
       setState(() {
         _isInitialized = true;
