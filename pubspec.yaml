@@ -14,9 +14,14 @@ dependencies:
   provider: ^6.1.0        # Recommended for simplicity
 
 dev_dependencies:
-  flutter_lints: ^3.0.0   # Official Flutter lints
+  coverage: ^1.7.0            # Test coverage
+  flutter_lints: ^3.0.0       # Official Flutter lints
   flutter_test:
     sdk: flutter
+  golden_toolkit: ^0.15.0     # Golden file testing
+  integration_test:
+    sdk: flutter
+  mocktail: ^1.0.0            # Mocking library
   test: ^1.24.0
   very_good_analysis: ^5.1.0  # Additional strict lints
 
