@@ -2,12 +2,13 @@
 ///
 /// This game displays:
 /// - Large, colorful cursor at mouse position
-/// - Trail effect following mouse movement (last 30 positions)
+/// - Trail effect following mouse movement (up to 30 positions within 1 second)
 /// - Expanding ripple animations on clicks
 /// - Button state indicators (L/R/M) showing which buttons are pressed
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:keyboard_playground/games/base_game.dart';
 import 'package:keyboard_playground/platform/input_events.dart' as events;
 
@@ -15,7 +16,7 @@ import 'package:keyboard_playground/platform/input_events.dart' as events;
 ///
 /// Features:
 /// - Smooth cursor tracking at 60 FPS
-/// - Fading trail showing last 30 mouse positions
+/// - Fading trail showing up to 30 mouse positions within 1 second
 /// - Click ripple animations with different colors per button
 /// - Real-time button state indicators in corners
 class MouseVisualizerGame extends BaseGame {
@@ -23,7 +24,16 @@ class MouseVisualizerGame extends BaseGame {
   MouseVisualizerGame() {
     // Initialize with center position
     _mousePosition = const Offset(960, 540); // Default to 1920x1080 center
+    _startAnimationTicker();
   }
+
+  // Animation constants
+  static const int _animationDurationMs = 1000; // 1 second
+  static const int _maxTrailPoints = 30;
+  static const double _minTrailSize = 8;
+  static const double _maxTrailSize = 20;
+  static const double _rippleStartSize = 20;
+  static const double _rippleMaxSize = 220;
 
   Offset _mousePosition = Offset.zero;
   final List<_TrailPoint> _trail = [];
@@ -35,6 +45,8 @@ class MouseVisualizerGame extends BaseGame {
   };
 
   final ValueNotifier<int> _updateNotifier = ValueNotifier<int>(0);
+  bool _disposed = false;
+  bool _isScheduled = false;
 
   @override
   String get id => 'mouse_visualizer';
@@ -46,8 +58,30 @@ class MouseVisualizerGame extends BaseGame {
   String get description =>
       'Real-time visualization of mouse position and button states';
 
+  /// Starts the animation ticker for smooth 60 FPS updates.
+  void _startAnimationTicker() {
+    _scheduleNextFrame();
+  }
+
+  /// Schedules the next animation frame.
+  void _scheduleNextFrame() {
+    if (_disposed || _isScheduled) return;
+
+    _isScheduled = true;
+    SchedulerBinding.instance.scheduleFrameCallback((timeStamp) {
+      _isScheduled = false;
+      if (!_disposed && (_trail.isNotEmpty || _ripples.isNotEmpty)) {
+        _notifyUpdate();
+        _scheduleNextFrame();
+      }
+    });
+  }
+
   @override
   Widget buildUI() {
+    // Capture current time once per frame for all calculations
+    final now = DateTime.now();
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -74,10 +108,10 @@ class MouseVisualizerGame extends BaseGame {
               _buildInstructions(),
 
               // Ripples (drawn first, behind cursor and trail)
-              ..._buildRipples(),
+              ..._buildRipples(now),
 
               // Trail (drawn before cursor)
-              ..._buildTrail(),
+              ..._buildTrail(now),
 
               // Cursor (drawn last, on top)
               _buildCursor(),
@@ -124,14 +158,19 @@ class MouseVisualizerGame extends BaseGame {
     );
   }
 
-  List<Widget> _buildTrail() {
+  List<Widget> _buildTrail(DateTime now) {
+    // Clean up old trail points (older than animation duration)
+    _trail.removeWhere((point) {
+      return now.difference(point.timestamp).inMilliseconds >
+          _animationDurationMs;
+    });
+
     final widgets = <Widget>[];
     for (var i = 0; i < _trail.length; i++) {
       final point = _trail[i];
-      final age = DateTime.now().difference(point.timestamp).inMilliseconds;
-      const maxAge = 1000; // 1 second
-      final opacity = (1.0 - (age / maxAge)).clamp(0.0, 1.0);
-      final size = 8.0 + (opacity * 12.0); // 8-20px based on age
+      final age = now.difference(point.timestamp).inMilliseconds;
+      final opacity = (1.0 - (age / _animationDurationMs)).clamp(0.0, 1.0);
+      final size = _minTrailSize + (opacity * (_maxTrailSize - _minTrailSize));
 
       if (opacity > 0) {
         widgets.add(
@@ -153,20 +192,21 @@ class MouseVisualizerGame extends BaseGame {
     return widgets;
   }
 
-  List<Widget> _buildRipples() {
-    final now = DateTime.now();
+  List<Widget> _buildRipples(DateTime now) {
     final widgets = <Widget>[];
 
-    // Remove old ripples (older than 1 second)
+    // Remove old ripples
     _ripples.removeWhere((ripple) {
-      return now.difference(ripple.timestamp).inMilliseconds > 1000;
+      return now.difference(ripple.timestamp).inMilliseconds >
+          _animationDurationMs;
     });
 
     for (final ripple in _ripples) {
       final age = now.difference(ripple.timestamp).inMilliseconds;
-      final progress = (age / 1000.0).clamp(0.0, 1.0); // 0 to 1
-      final size = 20.0 + (progress * 200.0); // Expand from 20 to 220px
-      final opacity = (1.0 - progress).clamp(0.0, 1.0); // Fade out
+      final progress = (age / _animationDurationMs).clamp(0.0, 1.0);
+      final size =
+          _rippleStartSize + (progress * (_rippleMaxSize - _rippleStartSize));
+      final opacity = (1.0 - progress).clamp(0.0, 1.0);
 
       widgets.add(
         Positioned(
@@ -313,15 +353,10 @@ class MouseVisualizerGame extends BaseGame {
       ),
     );
 
-    // Keep only last 30 points
-    if (_trail.length > 30) {
+    // Keep only last N points (time-based cleanup happens in buildUI)
+    if (_trail.length > _maxTrailPoints) {
       _trail.removeAt(0);
     }
-
-    // Clean old trail points (older than 1 second)
-    _trail.removeWhere((point) {
-      return DateTime.now().difference(point.timestamp).inMilliseconds > 1000;
-    });
   }
 
   void _handleMouseButton(events.MouseButtonEvent event) {
@@ -359,6 +394,7 @@ class MouseVisualizerGame extends BaseGame {
 
   @override
   void dispose() {
+    _disposed = true;
     _updateNotifier.dispose();
     super.dispose();
   }

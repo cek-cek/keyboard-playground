@@ -113,7 +113,7 @@ void main() {
         final downEvent = EventBuilder.mouseDown(
           300,
           400,
-          button: MouseButton.right,
+          button: events.MouseButton.right,
         );
         game.onMouseEvent(downEvent);
         await tester.pump();
@@ -123,7 +123,7 @@ void main() {
         final upEvent = EventBuilder.mouseUp(
           300,
           400,
-          button: MouseButton.right,
+          button: events.MouseButton.right,
         );
         game.onMouseEvent(upEvent);
         await tester.pump();
@@ -137,7 +137,7 @@ void main() {
         final downEvent = EventBuilder.mouseDown(
           300,
           400,
-          button: MouseButton.middle,
+          button: events.MouseButton.middle,
         );
         game.onMouseEvent(downEvent);
         await tester.pump();
@@ -147,7 +147,7 @@ void main() {
         final upEvent = EventBuilder.mouseUp(
           300,
           400,
-          button: MouseButton.middle,
+          button: events.MouseButton.middle,
         );
         game.onMouseEvent(upEvent);
         await tester.pump();
@@ -184,7 +184,7 @@ void main() {
           EventBuilder.mouseDown(
             100,
             100,
-            button: MouseButton.right,
+            button: events.MouseButton.right,
           ),
         );
         await tester.pump();
@@ -194,7 +194,7 @@ void main() {
           EventBuilder.mouseDown(
             100,
             100,
-            button: MouseButton.middle,
+            button: events.MouseButton.middle,
           ),
         );
         await tester.pump();
@@ -204,10 +204,10 @@ void main() {
         // Release all buttons
         game.onMouseEvent(EventBuilder.mouseUp(100, 100));
         game.onMouseEvent(
-          EventBuilder.mouseUp(100, 100, button: MouseButton.right),
+          EventBuilder.mouseUp(100, 100, button: events.MouseButton.right),
         );
         game.onMouseEvent(
-          EventBuilder.mouseUp(100, 100, button: MouseButton.middle),
+          EventBuilder.mouseUp(100, 100, button: events.MouseButton.middle),
         );
         await tester.pump();
 
