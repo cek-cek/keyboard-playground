@@ -69,8 +69,8 @@ flutter test integration_test/
 Mock implementation of `InputCapture` for simulating input events.
 
 ```dart
-import 'package:keyboard_playground/test/test_utils/mocks/mock_input_capture.dart';
-import 'package:keyboard_playground/test/test_utils/builders/event_builder.dart';
+import '../test_utils/mocks/mock_input_capture.dart';
+import '../test_utils/builders/event_builder.dart';
 
 final mockInput = MockInputCapture();
 
@@ -91,7 +91,7 @@ mockInput.emitEvents([
 Mock implementation for window management operations.
 
 ```dart
-import 'package:keyboard_playground/test/test_utils/mocks/mock_window_control.dart';
+import '../test_utils/mocks/mock_window_control.dart';
 
 final mockWindow = MockWindowControl();
 
@@ -108,7 +108,7 @@ expect(mockWindow.isFullscreen, true);
 Mock implementation for game management.
 
 ```dart
-import 'package:keyboard_playground/test/test_utils/mocks/mock_game_manager.dart';
+import '../test_utils/mocks/mock_game_manager.dart';
 
 final mockManager = MockGameManager();
 mockManager.registerGame(testGame);
@@ -120,7 +120,7 @@ mockManager.switchGame(testGame.id);
 Create test events easily with `EventBuilder`.
 
 ```dart
-import 'package:keyboard_playground/test/test_utils/builders/event_builder.dart';
+import '../test_utils/builders/event_builder.dart';
 
 // Create key events
 final keyDown = EventBuilder.keyDown('a');
@@ -146,7 +146,7 @@ final scroll = EventBuilder.mouseScroll(deltaY: -120);
 Pre-built event sequences for common scenarios.
 
 ```dart
-import 'package:keyboard_playground/test/fixtures/events.dart';
+import '../fixtures/events.dart';
 
 // Use pre-built sequences
 mockInput.emitEvents(EventFixtures.typingHello);
@@ -168,7 +168,7 @@ final rapidTyping = EventFixtures.rapidTyping('hello world');
 Helpers for widget testing.
 
 ```dart
-import 'package:keyboard_playground/test/test_utils/helpers/widget_test_helpers.dart';
+import '../test_utils/helpers/widget_test_helpers.dart';
 
 testWidgets('MyWidget displays correctly', (tester) async {
   // Pump widget with app theme
@@ -193,7 +193,7 @@ testWidgets('MyWidget displays correctly', (tester) async {
 Test input events with custom matchers.
 
 ```dart
-import 'package:keyboard_playground/test/test_utils/matchers/custom_matchers.dart';
+import '../test_utils/matchers/custom_matchers.dart';
 
 // Match key events
 expect(event, isKeyEvent(key: 'a', isDown: true));
@@ -220,7 +220,7 @@ expect(
 Helpers for integration tests.
 
 ```dart
-import 'package:keyboard_playground/test/test_utils/helpers/integration_test_helpers.dart';
+import '../test_utils/helpers/integration_test_helpers.dart';
 
 // Wait for a condition
 await IntegrationTestHelpers.waitFor(

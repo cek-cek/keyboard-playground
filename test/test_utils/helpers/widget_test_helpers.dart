@@ -78,7 +78,11 @@ Future<void> enterTextAndSettle(
 
 /// Helper to check if a widget has a specific text color.
 bool hasTextColor(Finder finder, Color expectedColor) {
-  final widget = finder.evaluate().first.widget;
+  final elements = finder.evaluate();
+  if (elements.isEmpty) {
+    return false;
+  }
+  final widget = elements.first.widget;
   if (widget is Text) {
     return widget.style?.color == expectedColor;
   }
@@ -87,7 +91,11 @@ bool hasTextColor(Finder finder, Color expectedColor) {
 
 /// Helper to get the text from a Text widget.
 String? getTextFromFinder(Finder finder) {
-  final widget = finder.evaluate().first.widget;
+  final elements = finder.evaluate();
+  if (elements.isEmpty) {
+    return null;
+  }
+  final widget = elements.first.widget;
   if (widget is Text) {
     return widget.data ?? widget.textSpan?.toPlainText();
   }
@@ -98,7 +106,11 @@ String? getTextFromFinder(Finder finder) {
 ///
 /// Returns false if hidden by Opacity or Visibility.
 bool isVisible(Finder finder) {
-  final element = finder.evaluate().first;
+  final elements = finder.evaluate();
+  if (elements.isEmpty) {
+    return false;
+  }
+  final element = elements.first;
   final widget = element.widget;
 
   if (widget is Opacity) {
