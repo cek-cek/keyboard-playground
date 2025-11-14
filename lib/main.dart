@@ -181,6 +181,7 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
     if (_isInitialized) {
       _inputCapture.stopCapture();
       _gameManager.dispose();
+      _exitHandler.dispose();
     }
     super.dispose();
   }
