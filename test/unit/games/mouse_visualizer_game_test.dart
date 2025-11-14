@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keyboard_playground/games/mouse_visualizer_game.dart';
-import 'package:keyboard_playground/platform/input_events.dart';
 import 'package:keyboard_playground/platform/input_events.dart' as events;
 
 import '../../test_utils/builders/event_builder.dart';
