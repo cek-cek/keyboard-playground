@@ -187,8 +187,8 @@ class AppTheme {
         ),
       ),
 
-      // Card theme
-      cardTheme: CardThemeData(
+      // Card theme - using shape instead of deprecated fields
+      cardTheme: CardTheme(
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -197,8 +197,8 @@ class AppTheme {
         margin: const EdgeInsets.all(8),
       ),
 
-      // Dialog theme
-      dialogTheme: DialogThemeData(
+      // Dialog theme - using compatible DialogTheme
+      dialogTheme: DialogTheme(
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

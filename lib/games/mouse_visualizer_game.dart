@@ -7,9 +7,8 @@
 /// - Button state indicators (L/R/M) showing which buttons are pressed
 library;
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:keyboard_playground/games/base_game.dart';
 import 'package:keyboard_playground/platform/input_events.dart' as events;
 
@@ -47,7 +46,6 @@ class MouseVisualizerGame extends BaseGame {
 
   final ValueNotifier<int> _updateNotifier = ValueNotifier<int>(0);
   bool _disposed = false;
-  Timer? _animationTimer;
 
   @override
   String get id => 'mouse_visualizer';
@@ -59,34 +57,26 @@ class MouseVisualizerGame extends BaseGame {
   String get description =>
       'Real-time visualization of mouse position and button states';
 
-  /// Schedules the next animation frame using a timer.
+  /// Schedules the next animation frame using SchedulerBinding.
   void _scheduleNextFrame() {
-    if (_disposed || _animationTimer != null) return;
+    if (_disposed) return;
 
-    // Use a periodic timer for animations (~60 FPS = ~16ms)
-    _animationTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (_disposed) {
-        timer.cancel();
-        _animationTimer = null;
-        return;
+    // Stop animation if no active elements
+    if (_trail.isEmpty && _ripples.isEmpty) {
+      return;
+    }
+
+    // Use SchedulerBinding for optimal frame timing
+    SchedulerBinding.instance.scheduleFrameCallback((_) {
+      if (!_disposed) {
+        _notifyUpdate();
+        _scheduleNextFrame();
       }
-
-      // Stop animation if no active elements
-      if (_trail.isEmpty && _ripples.isEmpty) {
-        timer.cancel();
-        _animationTimer = null;
-        return;
-      }
-
-      _notifyUpdate();
     });
   }
 
   @override
   Widget buildUI() {
-    // Capture current time once per frame for all calculations
-    final now = DateTime.now();
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -101,138 +91,37 @@ class MouseVisualizerGame extends BaseGame {
       child: ValueListenableBuilder<int>(
         valueListenable: _updateNotifier,
         builder: (context, _, __) {
+          // Capture current time once per frame for all calculations
+          final now = DateTime.now();
+
           return Stack(
             children: [
-              // Background grid (optional, for visual reference)
-              _buildBackgroundGrid(),
+              // Background grid (static, using const)
+              const _BackgroundGridWidget(),
 
-              // Button indicators
+              // Animated elements (using CustomPainter for better performance)
+              RepaintBoundary(
+                child: CustomPaint(
+                  painter: _MouseVisualizerPainter(
+                    trail: _trail,
+                    ripples: _ripples,
+                    mousePosition: _mousePosition,
+                    currentTime: now,
+                  ),
+                  size: Size.infinite,
+                ),
+              ),
+
+              // Button indicators (UI elements on top)
               _buildButtonIndicators(),
 
-              // Instructions
+              // Instructions (UI elements on top)
               _buildInstructions(),
-
-              // Ripples (drawn first, behind cursor and trail)
-              ..._buildRipples(now),
-
-              // Trail (drawn before cursor)
-              ..._buildTrail(now),
-
-              // Cursor (drawn last, on top)
-              _buildCursor(),
             ],
           );
         },
       ),
     );
-  }
-
-  Widget _buildBackgroundGrid() {
-    return CustomPaint(
-      size: Size.infinite,
-      painter: _GridPainter(),
-    );
-  }
-
-  Widget _buildCursor() {
-    return Positioned(
-      left: _mousePosition.dx - 20,
-      top: _mousePosition.dy - 20,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const RadialGradient(
-            colors: [
-              Color(0xFFFFFFFF), // White center
-              Color(0xFF60A5FA), // Blue 400
-              Color(0xFF3B82F6), // Blue 500
-            ],
-            stops: [0.0, 0.5, 1.0],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF3B82F6).withValues(alpha: 0.6),
-              blurRadius: 20,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildTrail(DateTime now) {
-    // Clean up old trail points (older than animation duration)
-    _trail.removeWhere((point) {
-      return now.difference(point.timestamp).inMilliseconds >
-          _animationDurationMs;
-    });
-
-    final widgets = <Widget>[];
-    for (var i = 0; i < _trail.length; i++) {
-      final point = _trail[i];
-      final age = now.difference(point.timestamp).inMilliseconds;
-      final opacity = (1.0 - (age / _animationDurationMs)).clamp(0.0, 1.0);
-      final size = _minTrailSize + (opacity * (_maxTrailSize - _minTrailSize));
-
-      if (opacity > 0) {
-        widgets.add(
-          Positioned(
-            left: point.position.dx - size / 2,
-            top: point.position.dy - size / 2,
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF60A5FA).withValues(alpha: opacity * 0.6),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-    return widgets;
-  }
-
-  List<Widget> _buildRipples(DateTime now) {
-    final widgets = <Widget>[];
-
-    // Remove old ripples
-    _ripples.removeWhere((ripple) {
-      return now.difference(ripple.timestamp).inMilliseconds >
-          _animationDurationMs;
-    });
-
-    for (final ripple in _ripples) {
-      final age = now.difference(ripple.timestamp).inMilliseconds;
-      final progress = (age / _animationDurationMs).clamp(0.0, 1.0);
-      final size =
-          _rippleStartSize + (progress * (_rippleMaxSize - _rippleStartSize));
-      final opacity = (1.0 - progress).clamp(0.0, 1.0);
-
-      widgets.add(
-        Positioned(
-          left: ripple.position.dx - size / 2,
-          top: ripple.position.dy - size / 2,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: ripple.color.withValues(alpha: opacity),
-                width: 3,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return widgets;
   }
 
   Widget _buildButtonIndicators() {
@@ -279,7 +168,7 @@ class MouseVisualizerGame extends BaseGame {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: isPressed ? color : color.withValues(alpha: 0.2),
+        color: isPressed ? color : color.withOpacity(0.2),
         border: Border.all(
           color: color,
           width: 2,
@@ -288,7 +177,7 @@ class MouseVisualizerGame extends BaseGame {
         boxShadow: isPressed
             ? [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.5),
+                  color: color.withOpacity(0.5),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -406,9 +295,6 @@ class MouseVisualizerGame extends BaseGame {
   @override
   void dispose() {
     _disposed = true;
-    // Cancel animation timer
-    _animationTimer?.cancel();
-    _animationTimer = null;
     // Clear all animation state
     _trail.clear();
     _ripples.clear();
@@ -441,12 +327,25 @@ class _ClickRipple {
   final DateTime timestamp;
 }
 
+/// Static background grid widget.
+class _BackgroundGridWidget extends StatelessWidget {
+  const _BackgroundGridWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size.infinite,
+      painter: _GridPainter(),
+    );
+  }
+}
+
 /// Custom painter for the background grid.
 class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF334155).withValues(alpha: 0.1) // Slate 700
+      ..color = const Color(0xFF334155).withOpacity(0.1) // Slate 700
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -471,4 +370,109 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Custom painter for mouse visualizer animated elements.
+class _MouseVisualizerPainter extends CustomPainter {
+  const _MouseVisualizerPainter({
+    required this.trail,
+    required this.ripples,
+    required this.mousePosition,
+    required this.currentTime,
+  });
+
+  final List<_TrailPoint> trail;
+  final List<_ClickRipple> ripples;
+  final Offset mousePosition;
+  final DateTime currentTime;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw ripples first (behind everything)
+    _drawRipples(canvas);
+
+    // Draw trail
+    _drawTrail(canvas);
+
+    // Draw cursor last (on top)
+    _drawCursor(canvas);
+  }
+
+  void _drawTrail(Canvas canvas) {
+    for (final point in trail) {
+      final age = currentTime.difference(point.timestamp).inMilliseconds;
+      if (age > MouseVisualizerGame._animationDurationMs) continue;
+
+      final opacity = (1.0 - (age / MouseVisualizerGame._animationDurationMs))
+          .clamp(0.0, 1.0);
+      final size = MouseVisualizerGame._minTrailSize +
+          (opacity *
+              (MouseVisualizerGame._maxTrailSize -
+                  MouseVisualizerGame._minTrailSize));
+
+      if (opacity > 0) {
+        final paint = Paint()
+          ..color = const Color(0xFF60A5FA).withOpacity(opacity * 0.6)
+          ..style = PaintingStyle.fill;
+
+        canvas.drawCircle(point.position, size / 2, paint);
+      }
+    }
+  }
+
+  void _drawRipples(Canvas canvas) {
+    for (final ripple in ripples) {
+      final age = currentTime.difference(ripple.timestamp).inMilliseconds;
+      if (age > MouseVisualizerGame._animationDurationMs) continue;
+
+      final progress =
+          (age / MouseVisualizerGame._animationDurationMs).clamp(0.0, 1.0);
+      final size = MouseVisualizerGame._rippleStartSize +
+          (progress *
+              (MouseVisualizerGame._rippleMaxSize -
+                  MouseVisualizerGame._rippleStartSize));
+      final opacity = (1.0 - progress).clamp(0.0, 1.0);
+
+      if (opacity > 0) {
+        final paint = Paint()
+          ..color = ripple.color.withOpacity(opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3;
+
+        canvas.drawCircle(ripple.position, size / 2, paint);
+      }
+    }
+  }
+
+  void _drawCursor(Canvas canvas) {
+    // Outer glow
+    final glowPaint = Paint()
+      ..color = const Color(0xFF3B82F6).withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawCircle(mousePosition, 25, glowPaint);
+
+    // Gradient fill (simulated with multiple circles)
+    final centerPaint = Paint()
+      ..color = const Color(0xFFFFFFFF)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(mousePosition, 20, centerPaint);
+
+    final midPaint = Paint()
+      ..color = const Color(0xFF60A5FA)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(mousePosition, 15, midPaint);
+
+    final outerPaint = Paint()
+      ..color = const Color(0xFF3B82F6)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(mousePosition, 10, outerPaint);
+  }
+
+  @override
+  bool shouldRepaint(_MouseVisualizerPainter oldDelegate) {
+    return trail.length != oldDelegate.trail.length ||
+        ripples.length != oldDelegate.ripples.length ||
+        mousePosition != oldDelegate.mousePosition ||
+        currentTime != oldDelegate.currentTime;
+  }
 }

@@ -60,10 +60,10 @@ class ExitProgressIndicator extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.7),
+              color: Colors.black.withOpacity(0.7),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
               ),
             ),
             child: Column(
@@ -88,7 +88,7 @@ class ExitProgressIndicator extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: progress.progress,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      backgroundColor: Colors.white.withOpacity(0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _getProgressColor(progress.progress),
                       ),
@@ -105,7 +105,7 @@ class ExitProgressIndicator extends StatelessWidget {
                     Text(
                       'Step: ${progress.currentStep}/${progress.totalSteps}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withOpacity(0.8),
                         fontSize: 10,
                       ),
                     ),

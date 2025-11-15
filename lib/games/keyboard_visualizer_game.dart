@@ -165,7 +165,7 @@ class KeyboardVisualizerGame extends BaseGame {
         vertical: compact ? 8 : 12,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+        color: const Color(0xFF1E293B).withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Colors.white24,
@@ -196,7 +196,7 @@ class KeyboardVisualizerGame extends BaseGame {
           width: 20,
           height: 20,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.3),
+            color: color.withOpacity(0.3),
             border: Border.all(color: color, width: 2),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -426,7 +426,7 @@ class KeyboardLayoutWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: baseUnit * 0.35,
             spreadRadius: baseUnit * 0.08,
           ),
@@ -545,17 +545,17 @@ class KeyWidget extends StatelessWidget {
         curve: Curves.easeOut,
         decoration: BoxDecoration(
           color: isPressed
-              ? color.withValues(alpha: 0.85)
-              : const Color(0xFF475569).withValues(alpha: 0.65),
+              ? color.withOpacity(0.85)
+              : const Color(0xFF475569).withOpacity(0.65),
           border: Border.all(
-            color: isPressed ? color : color.withValues(alpha: 0.35),
+            color: isPressed ? color : color.withOpacity(0.35),
             width: isPressed ? 3 : 2,
           ),
           borderRadius: BorderRadius.circular(6),
           boxShadow: isPressed
               ? [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.6),
+                    color: color.withOpacity(0.6),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),

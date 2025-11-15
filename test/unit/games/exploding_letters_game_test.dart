@@ -144,7 +144,7 @@ void main() {
         expect(game.activeLettersCount, equals(1));
 
         // Now create an old letter scenario by testing with getProgress
-        final oldLetterProgress = oldLetter.getProgress();
+        final oldLetterProgress = oldLetter.getProgress(DateTime.now());
         expect(oldLetterProgress, equals(1.0)); // Should be fully progressed
       });
     });
@@ -188,7 +188,7 @@ void main() {
           createdAt: DateTime.now(),
         );
 
-        final initialProgress = newLetter.getProgress();
+        final initialProgress = newLetter.getProgress(DateTime.now());
         expect(initialProgress, lessThan(0.1));
 
         // Create a letter 500ms in the past
@@ -199,7 +199,7 @@ void main() {
           createdAt: DateTime.now().subtract(const Duration(milliseconds: 500)),
         );
 
-        final laterProgress = olderLetter.getProgress();
+        final laterProgress = olderLetter.getProgress(DateTime.now());
         expect(laterProgress, greaterThan(initialProgress));
         expect(laterProgress, lessThan(1.0));
         expect(laterProgress, closeTo(0.167, 0.05)); // ~500/3000
@@ -213,7 +213,7 @@ void main() {
           createdAt: DateTime.now().subtract(const Duration(seconds: 10)),
         );
 
-        expect(oldLetter.getProgress(), equals(1.0));
+        expect(oldLetter.getProgress(DateTime.now()), equals(1.0));
       });
     });
 
@@ -251,7 +251,7 @@ void main() {
         );
 
         // Get position at 1 second elapsed
-        final position = particle.getCurrentPosition();
+        final position = particle.getCurrentPosition(DateTime.now());
 
         // After 1 second:
         // X = 100 + 100*1 = 200 (moving right)
@@ -273,7 +273,7 @@ void main() {
           createdAt: DateTime.now(),
         );
 
-        final newOpacity = newParticle.getOpacity();
+        final newOpacity = newParticle.getOpacity(DateTime.now());
         expect(newOpacity, greaterThan(0.9));
 
         // Create particle with 500ms elapsed
@@ -285,7 +285,7 @@ void main() {
           createdAt: DateTime.now().subtract(const Duration(milliseconds: 500)),
         );
 
-        final olderOpacity = olderParticle.getOpacity();
+        final olderOpacity = olderParticle.getOpacity(DateTime.now());
         expect(olderOpacity, lessThan(newOpacity));
         expect(olderOpacity, greaterThan(0.5)); // Still fairly visible
       });
@@ -299,19 +299,29 @@ void main() {
           createdAt: DateTime.now().subtract(const Duration(seconds: 4)),
         );
 
-        expect(oldParticle.getOpacity(), equals(0.0));
+        expect(oldParticle.getOpacity(DateTime.now()), equals(0.0));
       });
     });
 
     group('ExplodingLettersPainter', () {
       test('can be instantiated', () {
-        final painter = ExplodingLettersPainter(letters: []);
+        final painter = ExplodingLettersPainter(
+          letters: [],
+          currentTime: DateTime.now(),
+        );
         expect(painter, isNotNull);
       });
 
-      test('shouldRepaint always returns true for animations', () {
-        final painter1 = ExplodingLettersPainter(letters: []);
-        final painter2 = ExplodingLettersPainter(letters: []);
+      test('shouldRepaint returns true when letters change', () {
+        final now = DateTime.now();
+        final painter1 = ExplodingLettersPainter(
+          letters: [],
+          currentTime: now,
+        );
+        final painter2 = ExplodingLettersPainter(
+          letters: [],
+          currentTime: now.add(const Duration(milliseconds: 16)),
+        );
 
         expect(painter1.shouldRepaint(painter2), isTrue);
       });
@@ -324,7 +334,10 @@ void main() {
           createdAt: DateTime.now(),
         );
 
-        final painter = ExplodingLettersPainter(letters: [letter]);
+        final painter = ExplodingLettersPainter(
+          letters: [letter],
+          currentTime: DateTime.now(),
+        );
 
         await tester.pumpWidget(
           MaterialApp(

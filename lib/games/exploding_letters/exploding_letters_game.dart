@@ -76,11 +76,16 @@ class ExplodingLettersGame extends BaseGame {
           return ValueListenableBuilder<int>(
             valueListenable: _updateNotifier,
             builder: (context, _, __) {
-              return CustomPaint(
-                painter: ExplodingLettersPainter(
-                  letters: _activeLetters,
+              // Capture current time once per frame for consistent calculations
+              final now = DateTime.now();
+              return RepaintBoundary(
+                child: CustomPaint(
+                  painter: ExplodingLettersPainter(
+                    letters: _activeLetters,
+                    currentTime: now,
+                  ),
+                  size: Size.infinite,
                 ),
-                size: Size.infinite,
               );
             },
           );
@@ -305,7 +310,7 @@ class LetterEntity {
           style: TextStyle(
             fontSize: 72 * scale,
             fontWeight: FontWeight.bold,
-            color: color.withValues(alpha: opacity),
+            color: color.withOpacity(opacity),
             letterSpacing: 2,
           ),
         ),
@@ -318,7 +323,7 @@ class LetterEntity {
         style: TextStyle(
           fontSize: 72 * scale,
           fontWeight: FontWeight.bold,
-          color: color.withValues(alpha: opacity),
+          color: color.withOpacity(opacity),
           letterSpacing: 2,
         ),
       );
@@ -329,8 +334,8 @@ class LetterEntity {
   }
 
   /// Gets the progress of the animation (0.0 to 1.0).
-  double getProgress() {
-    final age = DateTime.now().difference(createdAt).inMilliseconds;
+  double getProgress(DateTime now) {
+    final age = now.difference(createdAt).inMilliseconds;
     return (age / ExplodingLettersGame.animationDurationMs).clamp(0.0, 1.0);
   }
 }
@@ -365,8 +370,8 @@ class Particle {
   static const double gravity = 300;
 
   /// Gets the current position of the particle based on elapsed time.
-  Offset getCurrentPosition() {
-    final elapsed = DateTime.now().difference(createdAt).inMilliseconds / 1000;
+  Offset getCurrentPosition(DateTime now) {
+    final elapsed = now.difference(createdAt).inMilliseconds / 1000;
 
     // Apply physics: position = initial + velocity * time +
     // 0.5 * gravity * time^2
@@ -377,8 +382,8 @@ class Particle {
   }
 
   /// Gets the opacity of the particle based on age (fades out).
-  double getOpacity() {
-    final age = DateTime.now().difference(createdAt).inMilliseconds;
+  double getOpacity(DateTime now) {
+    final age = now.difference(createdAt).inMilliseconds;
     final progress =
         (age / ExplodingLettersGame.animationDurationMs).clamp(0.0, 1.0);
 
@@ -392,15 +397,19 @@ class ExplodingLettersPainter extends CustomPainter {
   /// Creates a new painter.
   const ExplodingLettersPainter({
     required this.letters,
+    required this.currentTime,
   });
 
   /// Letters to render.
   final List<LetterEntity> letters;
 
+  /// Current time for consistent animation calculations.
+  final DateTime currentTime;
+
   @override
   void paint(Canvas canvas, Size size) {
     for (final letter in letters) {
-      final progress = letter.getProgress();
+      final progress = letter.getProgress(currentTime);
 
       // Draw the letter (visible for first portion of animation)
       if (progress < ExplodingLettersGame.letterVisibilityThreshold) {
@@ -438,13 +447,13 @@ class ExplodingLettersPainter extends CustomPainter {
   /// Draws all particles for a letter.
   void _drawParticles(Canvas canvas, LetterEntity letter) {
     for (final particle in letter.particles) {
-      final position = particle.getCurrentPosition();
-      final opacity = particle.getOpacity();
+      final position = particle.getCurrentPosition(currentTime);
+      final opacity = particle.getOpacity(currentTime);
 
       if (opacity <= 0) continue;
 
       final paint = Paint()
-        ..color = particle.color.withValues(alpha: opacity)
+        ..color = particle.color.withOpacity(opacity)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(position, particle.size, paint);
@@ -453,7 +462,8 @@ class ExplodingLettersPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ExplodingLettersPainter oldDelegate) {
-    // Always repaint to show animation updates
-    return true;
+    // Repaint if letters changed or time advanced
+    return letters.length != oldDelegate.letters.length ||
+        currentTime != oldDelegate.currentTime;
   }
 }
