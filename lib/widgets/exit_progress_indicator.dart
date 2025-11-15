@@ -58,70 +58,70 @@ class ExitProgressIndicator extends StatelessWidget {
           opacity: progress.state == ExitSequenceState.idle ? 0.0 : 1.0,
           duration: const Duration(milliseconds: 200),
           child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              const Text(
-                'Exit Sequence',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Progress bar
-              SizedBox(
-                width: 150,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress.progress,
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _getProgressColor(progress.progress),
-                    ),
-                    minHeight: 8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                const Text(
+                  'Exit Sequence',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              const SizedBox(height: 6),
+                const SizedBox(height: 8),
 
-              // Step counter and remaining time
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Step: ${progress.currentStep}/${progress.totalSteps}',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 10,
+                // Progress bar
+                SizedBox(
+                  width: 150,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress.progress,
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _getProgressColor(progress.progress),
+                      ),
+                      minHeight: 8,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${progress.remainingTime.inSeconds}s',
-                    style: TextStyle(
-                      color: _getTimeColor(progress.remainingTime),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(height: 6),
+
+                // Step counter and remaining time
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Step: ${progress.currentStep}/${progress.totalSteps}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${progress.remainingTime.inSeconds}s',
+                      style: TextStyle(
+                        color: _getTimeColor(progress.remainingTime),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

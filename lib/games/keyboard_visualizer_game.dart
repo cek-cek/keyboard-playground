@@ -105,38 +105,41 @@ class KeyboardVisualizerGame extends BaseGame {
                   keyStates: _keyStates,
                   baseUnit: baseUnit,
                 );
-                final columnChildren = <Widget>[
-                  SizedBox(height: topSpacer),
-                  Text(
-                    'Keyboard Visualizer',
-                    style: TextStyle(
-                      fontSize: titleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 2,
+                return Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: topSpacer),
+                        Center(
+                          child: Text(
+                            'Keyboard Visualizer',
+                            style: TextStyle(
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: afterTitleSpacer),
+                        // Scaled keyboard with increased height allocation
+                        SizedBox(
+                          height: screenHeight *
+                              0.55, // increased from 0.38 to show all keyboard rows
+                          child: FittedBox(
+                            child: SizedBox(
+                              height: fittedKeyboardHeight,
+                              child: keyboard,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: smallHeight ? 8 : 16),
+                        Center(child: _buildLegend(compact: smallHeight)),
+                        SizedBox(height: bottomSpacer),
+                      ],
                     ),
                   ),
-                  SizedBox(height: afterTitleSpacer),
-                  // Scaled keyboard
-                  SizedBox(
-                    height: screenHeight *
-                        0.38, // allocate portion of screen height (reduced from 0.42 to fix overflow)
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      alignment: Alignment.topCenter,
-                      child: SizedBox(
-                        height: fittedKeyboardHeight,
-                        child: keyboard,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: smallHeight ? 8 : 12),
-                  _buildLegend(compact: smallHeight),
-                  SizedBox(height: bottomSpacer),
-                ];
-                return ListView(
-                  padding: EdgeInsets.zero,
-                  children: columnChildren,
                 );
               },
             ),
@@ -148,8 +151,7 @@ class KeyboardVisualizerGame extends BaseGame {
 
   double _computeBaseUnitWidth(double screenWidth) {
     const numberRowUnits = 1 + 10 + 1 + 1 + 2; // simplified unit count
-    final targetWidth = screenWidth *
-        0.65; // balanced size for readability
+    final targetWidth = screenWidth * 0.65; // balanced size for readability
     final base = targetWidth / (numberRowUnits * 1.15);
     return base.clamp(18.0, 90.0);
   }
@@ -430,37 +432,31 @@ class KeyboardLayoutWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < _keyboardLayout.length; i++)
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: i < _keyboardLayout.length - 1 ? keyHeight * 0.16 : 0,
-                  top: i == 1 ? keyHeight * 0.16 : 0,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final keyInfo in _keyboardLayout[i])
-                      if (keyInfo.key != null)
-                        KeyWidget(
-                          keyInfo: keyInfo,
-                          isPressed: keyStates[keyInfo.key] ?? false,
-                          baseUnit: baseUnit,
-                        )
-                      else
-                        SizedBox(width: keyInfo.width * baseUnit),
-                  ],
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < _keyboardLayout.length; i++)
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: i < _keyboardLayout.length - 1 ? keyHeight * 0.16 : 0,
+                top: i == 1 ? keyHeight * 0.16 : 0,
               ),
-          ],
-          ),
-        ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final keyInfo in _keyboardLayout[i])
+                    if (keyInfo.key != null)
+                      KeyWidget(
+                        keyInfo: keyInfo,
+                        isPressed: keyStates[keyInfo.key] ?? false,
+                        baseUnit: baseUnit,
+                      )
+                    else
+                      SizedBox(width: keyInfo.width * baseUnit),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
