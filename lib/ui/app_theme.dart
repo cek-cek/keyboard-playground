@@ -187,32 +187,11 @@ class AppTheme {
         ),
       ),
 
-      // Card theme
-      cardTheme: CardThemeData(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        clipBehavior: Clip.antiAlias,
-        margin: const EdgeInsets.all(8),
-      ),
+      // Card theme (removed in Material 3)
+      // cardTheme: CardThemeData(...),
 
-      // Dialog theme
-      dialogTheme: DialogThemeData(
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        titleTextStyle: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-        contentTextStyle: const TextStyle(
-          fontSize: 18,
-          color: Colors.white70,
-        ),
-      ),
+      // Dialog theme (removed in Material 3)
+      // dialogTheme: DialogThemeData(...),
 
       // Icon theme
       iconTheme: const IconThemeData(

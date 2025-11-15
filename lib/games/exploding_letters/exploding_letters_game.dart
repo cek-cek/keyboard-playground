@@ -305,7 +305,7 @@ class LetterEntity {
           style: TextStyle(
             fontSize: 72 * scale,
             fontWeight: FontWeight.bold,
-            color: color.withValues(alpha: opacity),
+            color: color.withOpacity(opacity),
             letterSpacing: 2,
           ),
         ),
@@ -318,7 +318,7 @@ class LetterEntity {
         style: TextStyle(
           fontSize: 72 * scale,
           fontWeight: FontWeight.bold,
-          color: color.withValues(alpha: opacity),
+          color: color.withOpacity(opacity),
           letterSpacing: 2,
         ),
       );
@@ -444,7 +444,7 @@ class ExplodingLettersPainter extends CustomPainter {
       if (opacity <= 0) continue;
 
       final paint = Paint()
-        ..color = particle.color.withValues(alpha: opacity)
+        ..color = particle.color.withOpacity(opacity)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(position, particle.size, paint);
