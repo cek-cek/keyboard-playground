@@ -71,9 +71,18 @@ class KeyboardVisualizerGame extends BaseGame {
         final rowSpacing = baseUnit * 0.16;
         final keyboardPadding =
             baseUnit * 0.8; // inside container total vertical padding
+        final extraTopPadding =
+            baseUnit * 0.16; // extra top padding for row 1
+        final borderWidth =
+            baseUnit * 0.1; // top and bottom borders (0.05 each)
+        final layoutMargin =
+            baseUnit * 0.5; // extra margin for border radius and rounding
         final intrinsicKeyboardHeight = rowCount * baseUnit +
             (rowSpacing * (rowCount - 1)) +
-            keyboardPadding;
+            keyboardPadding +
+            extraTopPadding +
+            borderWidth +
+            layoutMargin;
         // Overhead (title + top/bottom spacers + legend) approximate and adaptive.
         final titleFontSize = smallHeight ? 28.0 : 48.0;
         final topSpacer = smallHeight ? 12.0 : 24.0;

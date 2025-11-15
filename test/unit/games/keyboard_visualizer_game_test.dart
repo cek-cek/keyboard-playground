@@ -254,7 +254,11 @@ void main() {
         await tester.pumpWidget(
           const MaterialApp(
             home: Scaffold(
-              body: KeyboardLayoutWidget(keyStates: {}, baseUnit: 60),
+              body: Center(
+                child: FittedBox(
+                  child: KeyboardLayoutWidget(keyStates: {}, baseUnit: 60),
+                ),
+              ),
             ),
           ),
         );
@@ -268,7 +272,12 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: KeyboardLayoutWidget(keyStates: keyStates, baseUnit: 60),
+              body: Center(
+                child: FittedBox(
+                  child:
+                      KeyboardLayoutWidget(keyStates: keyStates, baseUnit: 60),
+                ),
+              ),
             ),
           ),
         );
@@ -284,7 +293,12 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: KeyboardLayoutWidget(keyStates: keyStates, baseUnit: 60),
+              body: Center(
+                child: FittedBox(
+                  child:
+                      KeyboardLayoutWidget(keyStates: keyStates, baseUnit: 60),
+                ),
+              ),
             ),
           ),
         );
