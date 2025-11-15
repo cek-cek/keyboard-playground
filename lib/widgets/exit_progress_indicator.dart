@@ -45,86 +45,87 @@ class ExitProgressIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Always return a Positioned widget to maintain Stack layout consistency.
-    // When idle, use an invisible/zero-size positioned widget instead of
-    // SizedBox.shrink() to work around a rendering issue where the Stack
-    // doesn't properly render its first child unless there's a Positioned
-    // second child.
+    // When idle, use a zero-size widget to work around a rendering issue where
+    // the Stack doesn't properly render its first child unless there's a
+    // Positioned second child.
     return Positioned(
       top: 16,
       right: 16,
-      child: IgnorePointer(
-        ignoring: progress.state == ExitSequenceState.idle,
-        child: AnimatedOpacity(
-          opacity: progress.state == ExitSequenceState.idle ? 0.0 : 1.0,
-          duration: const Duration(milliseconds: 200),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+      child: progress.state == ExitSequenceState.idle
+          ? const SizedBox.shrink()
+          : IgnorePointer(
+              ignoring: false,
+              child: AnimatedOpacity(
+                opacity: 1,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      const Text(
+                        'Exit Sequence',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Progress bar
+                      SizedBox(
+                        width: 150,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress.progress,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              _getProgressColor(progress.progress),
+                            ),
+                            minHeight: 8,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Step counter and remaining time
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Step: ${progress.currentStep}/${progress.totalSteps}',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 10,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '${progress.remainingTime.inSeconds}s',
+                            style: TextStyle(
+                              color: _getTimeColor(progress.remainingTime),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                const Text(
-                  'Exit Sequence',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Progress bar
-                SizedBox(
-                  width: 150,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress.progress,
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _getProgressColor(progress.progress),
-                      ),
-                      minHeight: 8,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // Step counter and remaining time
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Step: ${progress.currentStep}/${progress.totalSteps}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 10,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${progress.remainingTime.inSeconds}s',
-                      style: TextStyle(
-                        color: _getTimeColor(progress.remainingTime),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 

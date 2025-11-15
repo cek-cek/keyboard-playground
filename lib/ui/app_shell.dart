@@ -206,41 +206,41 @@ class _AppShellState extends State<AppShell> {
           children: [
             const Icon(
               Icons.videogame_asset,
-              size: 120,
+              size: 80,
               color: Colors.white70,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             const Text(
               'Keyboard Playground',
               style: TextStyle(
-                fontSize: 56,
+                fontSize: 48,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             const Text(
               'No game selected',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 24,
                 color: Colors.white70,
               ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: _toggleGameSelection,
-              icon: const Icon(Icons.play_arrow, size: 32),
+              icon: const Icon(Icons.play_arrow, size: 28),
               label: const Text(
                 'Choose a Game',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 48,
-                  vertical: 24,
+                  horizontal: 40,
+                  vertical: 20,
                 ),
                 backgroundColor: Colors.green,
                 shape: RoundedRectangleBorder(
@@ -248,11 +248,11 @@ class _AppShellState extends State<AppShell> {
                 ),
               ),
             ),
-            const SizedBox(height: 96),
+            const SizedBox(height: 64),
             const Text(
               'Tip: Games will automatically fill the screen',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 color: Colors.white54,
                 fontStyle: FontStyle.italic,
               ),
