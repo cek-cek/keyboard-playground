@@ -9,24 +9,27 @@ import 'package:keyboard_playground/games/keyboard_visualizer_game.dart';
 import 'package:keyboard_playground/games/mouse_visualizer_game.dart';
 import 'package:keyboard_playground/games/placeholder_game.dart';
 import 'package:keyboard_playground/platform/input_capture.dart';
+import 'package:keyboard_playground/platform/input_events.dart';
 import 'package:keyboard_playground/platform/window_control.dart';
 import 'package:keyboard_playground/ui/app_shell.dart';
 import 'package:keyboard_playground/ui/app_theme.dart';
 
 void main() async {
-  // Ensure Flutter bindings are initialized
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Setup global error handling
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    debugPrint('Flutter Error: ${details.exception}');
-    debugPrint(details.stack.toString());
-  };
-
   // Run app with error zone
   runZonedGuarded(
-    () => runApp(const KeyboardPlaygroundApp()),
+    () {
+      // Ensure Flutter bindings are initialized
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Setup global error handling
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
+        debugPrint('Flutter Error: ${details.exception}');
+        debugPrint(details.stack.toString());
+      };
+
+      runApp(const KeyboardPlaygroundApp());
+    },
     (error, stack) {
       debugPrint('Uncaught Error: $error');
       debugPrint(stack.toString());
@@ -51,6 +54,8 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
   bool _isInitialized = false;
   String? _errorMessage;
   StreamSubscription<void>? _exitSubscription;
+  StreamSubscription<InputEvent>? _inputEventsSubscription;
+  bool _isExiting = false;
 
   @override
   void initState() {
@@ -73,17 +78,25 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
       final hasPermissions = await _inputCapture.checkPermissions();
       debugPrint('Permissions status: $hasPermissions');
 
-      if (!hasPermissions['accessibility']!) {
-        debugPrint('Requesting accessibility permissions...');
+      // Check platform-specific permission keys
+      // macOS uses 'accessibility', Linux uses 'x11_record'
+      final permissionGranted = (hasPermissions['accessibility'] ?? false) ||
+          (hasPermissions['x11_record'] ?? false);
+
+      if (!permissionGranted) {
+        debugPrint('Requesting permissions...');
         await _inputCapture.requestPermissions();
 
         // Wait a moment for user to grant permissions
         await Future<void>.delayed(const Duration(seconds: 2));
 
         final recheckPermissions = await _inputCapture.checkPermissions();
-        if (!recheckPermissions['accessibility']!) {
+        final recheckGranted = (recheckPermissions['accessibility'] ?? false) ||
+            (recheckPermissions['x11_record'] ?? false);
+
+        if (!recheckGranted) {
           setState(() {
-            _errorMessage = 'Accessibility permissions required.\n\n'
+            _errorMessage = 'Permissions required.\n\n'
                 'Please grant permissions in System Settings and restart.';
           });
           return;
@@ -141,7 +154,7 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
 
   void _setupEventRouting() {
     // Route all input events to the game manager
-    _inputCapture.events.listen((event) {
+    _inputEventsSubscription = _inputCapture.events.listen((event) {
       _gameManager.handleInputEvent(event);
     });
 
@@ -152,27 +165,43 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
   }
 
   Future<void> _handleExit() async {
-    debugPrint('Exit triggered, shutting down...');
+    if (_isExiting) {
+      return; // Prevent re-entrancy
+    }
+    _isExiting = true;
+    debugPrint('Exit triggered, beginning graceful shutdown...');
 
     try {
-      // Stop input capture
+      // 1. Cancel event routing first to avoid new events during teardown
+      await _inputEventsSubscription?.cancel();
+      _inputEventsSubscription = null;
+
+      // 2. Stop input capture thread
       await _inputCapture.stopCapture();
 
-      // Exit fullscreen
+      // 3. Dispose games and exit handler resources before engine shutdown
+      await _gameManager.dispose();
+      await _exitHandler.dispose();
+
+      // 4. Leave fullscreen (best effort)
       await WindowControl.exitFullscreen();
 
-      // Give a moment for cleanup
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      // 5. Allow a short delay for platform channel flush
+      await Future<void>.delayed(const Duration(milliseconds: 150));
 
-      // Exit app
+      // 6. Request navigator pop (desktop-friendly: this closes window)
       if (mounted) {
         await SystemChannels.platform.invokeMethod<void>('SystemNavigator.pop');
       }
+      debugPrint('Graceful shutdown complete.');
     } catch (e) {
       debugPrint('Error during exit: $e');
-      // Force exit
+      // Fallback attempt: still try to pop navigator if mounted
       if (mounted) {
-        await SystemNavigator.pop();
+        try {
+          await SystemChannels.platform
+              .invokeMethod<void>('SystemNavigator.pop');
+        } catch (_) {}
       }
     }
   }
@@ -180,7 +209,9 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
   @override
   void dispose() {
     _exitSubscription?.cancel();
+    _inputEventsSubscription?.cancel();
     if (_isInitialized) {
+      // Ensure disposal order mirrors graceful exit
       _inputCapture.stopCapture();
       _gameManager.dispose();
       _exitHandler.dispose();

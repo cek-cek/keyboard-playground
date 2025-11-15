@@ -69,6 +69,14 @@ class _AppShellState extends State<AppShell> {
     super.initState();
     _enterFullscreen();
     _setupListeners();
+    _updateScreenSize();
+  }
+
+  /// Updates the exit handler with the actual screen size from the platform.
+  Future<void> _updateScreenSize() async {
+    final screenSize = await WindowControl.getScreenSize();
+    widget.exitHandler.updateScreenSize(screenSize.width, screenSize.height);
+    debugPrint('Screen size updated: ${screenSize.width}x${screenSize.height}');
   }
 
   @override

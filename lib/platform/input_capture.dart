@@ -164,9 +164,14 @@ class InputCapture {
     switch (type) {
       case 'keyDown':
       case 'keyUp':
+        // Normalize key names across platforms (e.g. Linux/X11 uses 'Right',
+        // while Flutter logical key expects 'ArrowRight'). This keeps the rest
+        // of the app using consistent 'Arrow*' naming.
+        final rawKey = map['key'] as String;
+        final normalizedKey = _normalizeKey(rawKey);
         return KeyEvent(
           keyCode: map['keyCode'] as int,
-          key: map['key'] as String,
+          key: normalizedKey,
           modifiers: (map['modifiers'] as List).map(parseModifier).toSet(),
           isDown: type == 'keyDown',
           timestamp: timestamp,
@@ -198,6 +203,26 @@ class InputCapture {
 
       default:
         throw UnimplementedError('Unknown event type: $type');
+    }
+  }
+
+  /// Normalizes platform-specific key names to the app's canonical forms.
+  ///
+  /// X11 reports arrow keys as 'Left', 'Right', 'Up', 'Down'. We standardize
+  /// them to 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown' so the rest of
+  /// the app (exit sequences, visualizers) can rely on consistent naming.
+  String _normalizeKey(String key) {
+    switch (key) {
+      case 'Left':
+        return 'ArrowLeft';
+      case 'Right':
+        return 'ArrowRight';
+      case 'Up':
+        return 'ArrowUp';
+      case 'Down':
+        return 'ArrowDown';
+      default:
+        return key;
     }
   }
 

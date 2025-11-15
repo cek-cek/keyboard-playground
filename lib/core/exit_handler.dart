@@ -7,6 +7,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:keyboard_playground/platform/input_capture.dart';
 import 'package:keyboard_playground/platform/input_events.dart';
 
@@ -139,7 +140,9 @@ class ExitHandler {
     this.cornerThreshold = 50.0,
   })  : _inputCapture = inputCapture,
         _keyboardSequence = keyboardSequence ?? ExitSequence.keyboardDefault,
-        _mouseSequence = mouseSequence ?? ExitSequence.mouseDefault {
+        _mouseSequence = mouseSequence ?? ExitSequence.mouseDefault,
+        _actualScreenWidth = screenWidth,
+        _actualScreenHeight = screenHeight {
     _setupListeners();
   }
 
@@ -165,10 +168,14 @@ class ExitHandler {
   int _currentMouseStep = 0;
   Timer? _keyboardTimer;
   Timer? _mouseTimer;
+  Timer? _progressUpdateTimer;
   DateTime? _keyboardSequenceStartTime;
   DateTime? _mouseSequenceStartTime;
 
   StreamSubscription<InputEvent>? _inputSubscription;
+
+  late double _actualScreenWidth;
+  late double _actualScreenHeight;
 
   /// Stream of exit progress updates.
   ///
@@ -206,6 +213,10 @@ class ExitHandler {
     final expectedKey = _keyboardSequence.steps[_currentKeyboardStep];
 
     if (event.key == expectedKey) {
+      debugPrint(
+        'Key pressed: ${event.key} - '
+        'Step: $_currentKeyboardStep/${_keyboardSequence.steps.length}',
+      );
       // Correct key pressed
       _currentKeyboardStep++;
 
@@ -238,9 +249,18 @@ class ExitHandler {
     }
 
     final corner = _getCorner(event.x, event.y);
+    debugPrint(
+      'Mouse click at (${event.x}, ${event.y}) - '
+      'Screen: ${_actualScreenWidth}x$_actualScreenHeight - '
+      'Detected corner: $corner - '
+      'Expected: ${_mouseSequence.steps[_currentMouseStep]} - '
+      'Step: $_currentMouseStep/${_mouseSequence.steps.length}',
+    );
+
     if (corner == null) {
       // Click was not near any corner
       if (_currentMouseStep > 0) {
+        debugPrint('Click not near corner, resetting sequence');
         _resetMouse();
       }
       return;
@@ -251,6 +271,7 @@ class ExitHandler {
     if (corner == expectedCorner) {
       // Correct corner clicked
       _currentMouseStep++;
+      debugPrint('Correct corner! Advanced to step $_currentMouseStep');
 
       // Start or reset the timer
       if (_currentMouseStep == 1) {
@@ -265,10 +286,27 @@ class ExitHandler {
       }
     } else {
       // Wrong corner clicked, reset sequence
+      debugPrint('Wrong corner! Expected $expectedCorner, got $corner');
       if (_currentMouseStep > 0) {
         _resetMouse();
       }
     }
+  }
+
+  /// Updates the screen dimensions for corner detection.
+  ///
+  /// Should be called when the window size changes to ensure accurate corner
+  /// detection for the mouse exit sequence.
+  void updateScreenSize(double width, double height) {
+    _actualScreenWidth = width;
+    _actualScreenHeight = height;
+    debugPrint(
+      'ExitHandler screen size updated: ${width}x$height - '
+      'Corners: TL(0-$cornerThreshold, 0-$cornerThreshold), '
+      'TR(${width - cornerThreshold}-$width, 0-$cornerThreshold), '
+      'BR(${width - cornerThreshold}-$width, ${height - cornerThreshold}-$height), '
+      'BL(0-$cornerThreshold, ${height - cornerThreshold}-$height)',
+    );
   }
 
   /// Determines which corner (if any) the given coordinates are near.
@@ -278,13 +316,17 @@ class ExitHandler {
   String? _getCorner(double x, double y) {
     final threshold = cornerThreshold;
 
+    // Use actual screen dimensions for corner detection
+    final width = _actualScreenWidth;
+    final height = _actualScreenHeight;
+
     // Check each corner
     if (x < threshold && y < threshold) return 'topLeft';
-    if (x > screenWidth - threshold && y < threshold) return 'topRight';
-    if (x > screenWidth - threshold && y > screenHeight - threshold) {
+    if (x > width - threshold && y < threshold) return 'topRight';
+    if (x > width - threshold && y > height - threshold) {
       return 'bottomRight';
     }
-    if (x < threshold && y > screenHeight - threshold) return 'bottomLeft';
+    if (x < threshold && y > height - threshold) return 'bottomLeft';
 
     return null;
   }
@@ -292,17 +334,39 @@ class ExitHandler {
   void _startKeyboardTimer() {
     _keyboardTimer?.cancel();
     _keyboardTimer = Timer(_keyboardSequence.timeout, _resetKeyboard);
+    _startProgressUpdateTimer();
   }
 
   void _startMouseTimer() {
     _mouseTimer?.cancel();
     _mouseTimer = Timer(_mouseSequence.timeout, _resetMouse);
+    _startProgressUpdateTimer();
+  }
+
+  void _startProgressUpdateTimer() {
+    _progressUpdateTimer?.cancel();
+    _progressUpdateTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) {
+        if (_currentKeyboardStep > 0) {
+          _emitKeyboardProgress();
+        } else if (_currentMouseStep > 0) {
+          _emitMouseProgress();
+        }
+      },
+    );
+  }
+
+  void _stopProgressUpdateTimer() {
+    _progressUpdateTimer?.cancel();
+    _progressUpdateTimer = null;
   }
 
   void _resetKeyboard() {
     _currentKeyboardStep = 0;
     _keyboardTimer?.cancel();
     _keyboardSequenceStartTime = null;
+    _stopProgressUpdateTimer();
     _emitKeyboardProgress();
   }
 
@@ -310,6 +374,7 @@ class ExitHandler {
     _currentMouseStep = 0;
     _mouseTimer?.cancel();
     _mouseSequenceStartTime = null;
+    _stopProgressUpdateTimer();
     _emitMouseProgress();
   }
 
@@ -388,6 +453,7 @@ class ExitHandler {
   Future<void> dispose() async {
     _keyboardTimer?.cancel();
     _mouseTimer?.cancel();
+    _progressUpdateTimer?.cancel();
     await _inputSubscription?.cancel();
     await _progressController.close();
     await _exitTriggeredController.close();

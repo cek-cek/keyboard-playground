@@ -100,6 +100,12 @@ class ExplodingLettersGame extends BaseGame {
     // Get the character to display
     final character = _getDisplayCharacter(event.key);
 
+    // Ensure screen size is up to date (if not, fallback to reasonable default)
+    if (_screenSize.width < 1 || _screenSize.height < 1) {
+      // Fallback to a typical desktop window size
+      _screenSize = const Size(1280, 720);
+    }
+
     // Create new letter at random position
     final letter = LetterEntity(
       character: character,
@@ -109,6 +115,9 @@ class ExplodingLettersGame extends BaseGame {
     );
 
     _activeLetters.add(letter);
+
+    // Restart animation loop if needed
+    _scheduleNextFrame();
 
     // Cleanup happens in _updateAnimations via removeWhere
   }

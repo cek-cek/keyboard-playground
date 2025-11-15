@@ -140,15 +140,21 @@ static void stop_capture(InputCapturePlugin* self) {
   self->is_capturing = false;
   self->thread_running = false;
 
-  // Disable the record context
-  if (self->record_context && self->record_display) {
-    XRecordDisableContext(self->record_display, self->record_context);
-    XRecordFreeContext(self->record_display, self->record_context);
-    self->record_context = 0;
+  // Disable the record context using the main display (thread-safe)
+  // Must use a different display than the one blocked in XRecordEnableContext
+  if (self->record_context && self->display) {
+    XRecordDisableContext(self->display, self->record_context);
+    XFlush(self->display);
   }
 
   // Wait for thread to finish
   pthread_join(self->record_thread, nullptr);
+
+  // Now free the context using the record display
+  if (self->record_context && self->record_display) {
+    XRecordFreeContext(self->record_display, self->record_context);
+    self->record_context = 0;
+  }
 
   // Close the record display
   if (self->record_display) {
@@ -206,7 +212,7 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
 
       // Extract modifiers (byte 28-29)
       unsigned char modifier_state = event_data[28];
-      g_autoptr(FlValue) modifiers = fl_value_new_list();
+      FlValue* modifiers = fl_value_new_list();
       if (modifier_state & ShiftMask) {
         fl_value_append_take(modifiers, fl_value_new_string("shift"));
       }
@@ -230,9 +236,9 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
       // Extract button number (byte 1)
       unsigned char button = event_data[1];
 
-      // Extract position (bytes 24-27 for x, 28-31 for y - root coordinates)
-      int16_t x = *(int16_t*)(event_data + 24);
-      int16_t y = *(int16_t*)(event_data + 26);
+      // Extract position (bytes 20-23 for root_x/root_y - absolute screen coordinates)
+      int16_t x = *(int16_t*)(event_data + 20);
+      int16_t y = *(int16_t*)(event_data + 22);
 
       // Handle scroll wheel (buttons 4, 5 for vertical, 6, 7 for horizontal)
       if (button >= 4 && button <= 7 && event_type == ButtonPress) {
@@ -269,9 +275,9 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
     case MotionNotify: {
       fl_value_set_string_take(event_map, "type", fl_value_new_string("mouseMove"));
 
-      // Extract position
-      int16_t x = *(int16_t*)(event_data + 24);
-      int16_t y = *(int16_t*)(event_data + 26);
+      // Extract position (bytes 20-23 for root_x/root_y - absolute screen coordinates)
+      int16_t x = *(int16_t*)(event_data + 20);
+      int16_t y = *(int16_t*)(event_data + 22);
       fl_value_set_string_take(event_map, "x", fl_value_new_float(x));
       fl_value_set_string_take(event_map, "y", fl_value_new_float(y));
 
@@ -283,10 +289,37 @@ static void record_event_callback(XPointer closure, XRecordInterceptData* data) 
   XRecordFreeData(data);
 }
 
-// Send event to Dart via event channel
+// Helper structure for marshalling events to the platform thread
+typedef struct {
+  InputCapturePlugin* plugin;
+  FlValue* event;
+} EventData;
+
+// Idle callback to send event on platform thread
+static gboolean send_event_idle(gpointer user_data) {
+  EventData* data = (EventData*)user_data;
+
+  if (data->plugin->event_channel) {
+    fl_event_channel_send(data->plugin->event_channel, data->event, nullptr, nullptr);
+  }
+
+  // Clean up
+  fl_value_unref(data->event);
+  g_free(data);
+
+  return G_SOURCE_REMOVE;
+}
+
+// Send event to Dart via event channel (from any thread)
 static void send_event_to_dart(InputCapturePlugin* self, FlValue* event_data) {
   if (self->event_channel) {
-    fl_event_channel_send(self->event_channel, event_data, nullptr, nullptr);
+    // Create event data for marshalling using GLib allocation
+    EventData* data = g_new(EventData, 1);
+    data->plugin = self;
+    data->event = fl_value_ref(event_data);
+
+    // Schedule send on platform thread using GLib main loop
+    g_idle_add(send_event_idle, data);
   }
 }
 
@@ -390,5 +423,8 @@ void input_capture_plugin_register_with_registrar(FlPluginRegistrar* registrar) 
       "com.keyboardplayground/input_events",
       FL_METHOD_CODEC(codec));
 
-  g_object_unref(plugin);
+  // Keep the plugin alive for the lifetime of the application
+  // Don't unref - let it live for the entire app lifecycle
+  // g_object_ref_sink adds a reference but we never release it
+  g_object_ref(plugin);
 }
