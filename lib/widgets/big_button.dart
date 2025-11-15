@@ -61,7 +61,7 @@ class BigButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
         elevation: 6,
-        shadowColor: buttonColor.withOpacity(0.5),
+        shadowColor: buttonColor.withValues(alpha: 0.5),
       ),
       child: icon != null
           ? Row(
@@ -141,7 +141,7 @@ class MediumButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         elevation: 4,
-        shadowColor: buttonColor.withOpacity(0.5),
+        shadowColor: buttonColor.withValues(alpha: 0.5),
       ),
       child: icon != null
           ? Row(

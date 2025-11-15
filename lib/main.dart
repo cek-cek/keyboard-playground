@@ -134,7 +134,7 @@ class _KeyboardPlaygroundAppState extends State<KeyboardPlaygroundApp> {
         ..registerGame(ExplodingLettersGame())
         ..registerGame(KeyboardVisualizerGame())
         ..registerGame(MouseVisualizerGame())
-        ..switchGame('exploding_letters');
+        ..switchGame('keyboard_visualizer');
 
       setState(() {
         _isInitialized = true;

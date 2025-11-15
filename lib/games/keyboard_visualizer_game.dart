@@ -4,6 +4,7 @@
 /// highlight when pressed. Different key types (letters, numbers, modifiers)
 /// are color-coded for easy identification.
 library;
+// ignore_for_file: lines_longer_than_80_chars
 
 import 'package:flutter/material.dart';
 import 'package:keyboard_playground/games/base_game.dart';
@@ -28,6 +29,24 @@ class KeyboardVisualizerGame extends BaseGame {
   /// Notifier for key state changes.
   final ValueNotifier<int> _stateNotifier = ValueNotifier<int>(0);
 
+  /// Exposes current key states for testing (read-only copy).
+  @visibleForTesting
+  Map<String, bool> get keyStates => Map.unmodifiable(_keyStates);
+
+  // No periodic timer needed; UI updates on key events only.
+
+  bool _initialized = false;
+
+  void _ensureFirstFrame() {
+    if (_initialized) return;
+    _initialized = true;
+    // Force a rebuild after first frame to avoid any platform-specific
+    // blank surface glitches before first input.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _stateNotifier.value++;
+    });
+  }
+
   @override
   String get id => 'keyboard_visualizer';
 
@@ -40,70 +59,105 @@ class KeyboardVisualizerGame extends BaseGame {
 
   @override
   Widget buildUI() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F172A), // Slate 900
-            Color(0xFF1E293B), // Slate 800
-          ],
-        ),
-      ),
-      child: Center(
-        child: ValueListenableBuilder<int>(
-          valueListenable: _stateNotifier,
-          builder: (context, _, __) {
-            return SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 48),
-                  // Title
-                  const Text(
-                    'Keyboard Visualizer',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 2,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _ensureFirstFrame();
+        final screenWidth = constraints.maxWidth;
+        final screenHeight = constraints.maxHeight;
+        final smallHeight = screenHeight < 400;
+        final baseUnit = _computeBaseUnitWidth(screenWidth);
+        // Compute intrinsic keyboard height (unscaled) for potential scaling.
+        final rowCount = KeyboardLayoutWidget._keyboardLayout.length;
+        final rowSpacing = baseUnit * 0.16;
+        final keyboardPadding = baseUnit * 0.8; // inside container total vertical padding
+        final intrinsicKeyboardHeight = rowCount * baseUnit + (rowSpacing * (rowCount - 1)) + keyboardPadding;
+        // Overhead (title + top/bottom spacers + legend) approximate and adaptive.
+        final titleFontSize = smallHeight ? 28.0 : 48.0;
+        final topSpacer = smallHeight ? 12.0 : 24.0;
+        final afterTitleSpacer = smallHeight ? 8.0 : 16.0;
+        final bottomSpacer = smallHeight ? 12.0 : 24.0;
+        // legendHeight previously part of overhead calc; kept commented for reference
+        // final legendHeight = smallHeight ? 40.0 : 56.0;
+        // overhead previously used for manual scaling; retained for potential future tuning
+        // (ignored intentionally)
+        // We will fit the keyboard using a FittedBox inside Expanded to avoid overflow.
+        final fittedKeyboardHeight = intrinsicKeyboardHeight;
+        return Container(
+          constraints: const BoxConstraints.expand(),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF0F172A),
+                Color(0xFF1E293B),
+              ],
+            ),
+          ),
+          child: RepaintBoundary(
+            child: ValueListenableBuilder<int>(
+            valueListenable: _stateNotifier,
+            builder: (context, _, __) {
+              final keyboard = KeyboardLayoutWidget(
+                keyStates: _keyStates,
+                baseUnit: baseUnit,
+              );
+              final columnChildren = <Widget>[
+                SizedBox(height: topSpacer),
+                Text(
+                  'Keyboard Visualizer',
+                  style: TextStyle(
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 2,
+                  ),
+                ),
+                SizedBox(height: afterTitleSpacer),
+                // Scaled keyboard
+                SizedBox(
+                  height: screenHeight * 0.42, // allocate portion of screen height
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      height: fittedKeyboardHeight,
+                      child: keyboard,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Press any key to see it light up!',
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.white70,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-
-                  // Keyboard layout
-                  KeyboardLayoutWidget(keyStates: _keyStates),
-
-                  const SizedBox(height: 32),
-
-                  // Legend
-                  _buildLegend(),
-                  const SizedBox(height: 48),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+                ),
+                SizedBox(height: smallHeight ? 8 : 12),
+                _buildLegend(compact: smallHeight),
+                SizedBox(height: bottomSpacer),
+              ];
+              return ListView(
+                padding: EdgeInsets.zero,
+                children: columnChildren,
+              );
+            },
+          ),
+          ),
+        );
+      },
     );
+  }
+  double _computeBaseUnitWidth(double screenWidth) {
+    const numberRowUnits = 1 + 10 + 1 + 1 + 2; // simplified unit count
+    final targetWidth = screenWidth * 0.70; // shrink for test environment to avoid vertical overflow
+    final base = targetWidth / (numberRowUnits * 1.15);
+    return base.clamp(18.0, 90.0);
   }
 
   /// Builds the color legend showing key types.
-  Widget _buildLegend() {
+  Widget _buildLegend({bool compact = false}) {
+    final spacing = compact ? 12.0 : 24.0;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 12 : 16,
+        vertical: compact ? 8 : 12,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withOpacity(0.5),
+        color: const Color(0xFF1E293B).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Colors.white24,
@@ -114,11 +168,11 @@ class KeyboardVisualizerGame extends BaseGame {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildLegendItem('Letters', AppTheme.brightBlue),
-          const SizedBox(width: 24),
+          SizedBox(width: spacing),
           _buildLegendItem('Numbers', AppTheme.brightGreen),
-          const SizedBox(width: 24),
-          _buildLegendItem('Modifiers', AppTheme.brightOrange),
-          const SizedBox(width: 24),
+          SizedBox(width: spacing),
+            _buildLegendItem('Modifiers', AppTheme.brightOrange),
+          SizedBox(width: spacing),
           _buildLegendItem('Special', AppTheme.brightPurple),
         ],
       ),
@@ -134,7 +188,7 @@ class KeyboardVisualizerGame extends BaseGame {
           width: 20,
           height: 20,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             border: Border.all(color: color, width: 2),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -154,13 +208,57 @@ class KeyboardVisualizerGame extends BaseGame {
 
   @override
   void onKeyEvent(events.KeyEvent event) {
-    _keyStates[event.key] = event.isDown;
+    // Normalize incoming key names to match layout expectations.
+    // Native events on Linux emit base modifier names.
+    // (Shift, Control, Alt, Meta) layout uses left/right variants.
+    // We light both sides for generic modifiers. Letters uppercased.
+    final normalized = _normalizeForLayout(event.key);
+
+    if (_isGenericModifier(normalized)) {
+      _setKeyState('${normalized}Left', event.isDown);
+      _setKeyState('${normalized}Right', event.isDown);
+    } else if (normalized == 'ShiftLeft' ||
+        normalized == 'ShiftRight' ||
+        normalized == 'ControlLeft' ||
+        normalized == 'ControlRight' ||
+        normalized == 'AltLeft' ||
+        normalized == 'AltRight' ||
+        normalized == 'MetaLeft' ||
+        normalized == 'MetaRight') {
+      _setKeyState(normalized, event.isDown);
+    } else if (normalized == 'Return') {
+      // Map Return to Enter key in layout
+      _setKeyState('Enter', event.isDown);
+    } else if (normalized == 'Space' || normalized == ' ') {
+      // Layout uses a single space character as key identifier
+      _setKeyState(' ', event.isDown);
+    } else {
+      _setKeyState(normalized, event.isDown);
+    }
+
+    // Trigger rebuild
     _stateNotifier.value++;
+  }
+
+  bool _isGenericModifier(String key) {
+    return key == 'Shift' || key == 'Control' || key == 'Alt' || key == 'Meta';
+  }
+
+  void _setKeyState(String key, bool isDown) {
+    _keyStates[key] = isDown;
+  }
+
+  String _normalizeForLayout(String key) {
+    if (key.length == 1 && key.toUpperCase() != key.toLowerCase()) {
+      return key.toUpperCase();
+    }
+    return key;
   }
 
   @override
   void dispose() {
     _stateNotifier.dispose();
+    super.dispose();
   }
 }
 
@@ -169,11 +267,15 @@ class KeyboardLayoutWidget extends StatelessWidget {
   /// Creates a keyboard layout widget.
   const KeyboardLayoutWidget({
     required this.keyStates,
+    required this.baseUnit,
     super.key,
   });
 
   /// Current state of all keys (true = pressed, false/absent = released).
   final Map<String, bool> keyStates;
+
+  /// Base unit width for a single standard key.
+  final double baseUnit;
 
   /// Keyboard layout organized in rows.
   /// Each row is a list of key definitions.
@@ -274,24 +376,51 @@ class KeyboardLayoutWidget extends StatelessWidget {
       KeyInfo('ContextMenu', width: 1.25, label: '☰'),
       KeyInfo('ControlRight', width: 1.25, label: 'Ctrl'),
     ],
+    // Arrow keys row
+    [
+      // gap spacer to align under right side
+      KeyInfo(null, width: 2),
+      KeyInfo(
+        'ArrowUp',
+        width: 1,
+        label: '↑',
+      ),
+      KeyInfo(null, width: 0.5),
+      KeyInfo(
+        'ArrowLeft',
+        width: 1,
+        label: '←',
+      ),
+      KeyInfo(
+        'ArrowDown',
+        width: 1,
+        label: '↓',
+      ),
+      KeyInfo(
+        'ArrowRight',
+        width: 1,
+        label: '→',
+      ),
+    ],
   ];
 
   @override
   Widget build(BuildContext context) {
+    final keyHeight = baseUnit;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(baseUnit * 0.4),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         border: Border.all(
           color: const Color(0xFF475569),
-          width: 3,
+          width: baseUnit * 0.05,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
-            blurRadius: 20,
-            spreadRadius: 5,
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: baseUnit * 0.35,
+            spreadRadius: baseUnit * 0.08,
           ),
         ],
       ),
@@ -303,8 +432,8 @@ class KeyboardLayoutWidget extends StatelessWidget {
             for (var i = 0; i < _keyboardLayout.length; i++)
               Padding(
                 padding: EdgeInsets.only(
-                  bottom: i < _keyboardLayout.length - 1 ? 8.0 : 0,
-                  top: i == 1 ? 8.0 : 0, // Extra space after function row
+                  bottom: i < _keyboardLayout.length - 1 ? keyHeight * 0.16 : 0,
+                  top: i == 1 ? keyHeight * 0.16 : 0,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -314,9 +443,10 @@ class KeyboardLayoutWidget extends StatelessWidget {
                         KeyWidget(
                           keyInfo: keyInfo,
                           isPressed: keyStates[keyInfo.key] ?? false,
+                          baseUnit: baseUnit,
                         )
                       else
-                        SizedBox(width: keyInfo.width * 50),
+                        SizedBox(width: keyInfo.width * baseUnit),
                   ],
                 ),
               ),
@@ -355,6 +485,7 @@ class KeyWidget extends StatelessWidget {
   const KeyWidget({
     required this.keyInfo,
     required this.isPressed,
+    required this.baseUnit,
     super.key,
   });
 
@@ -363,6 +494,9 @@ class KeyWidget extends StatelessWidget {
 
   /// Whether the key is currently pressed.
   final bool isPressed;
+
+  /// Base key size unit.
+  final double baseUnit;
 
   /// Gets the color for this key based on its type.
   Color _getKeyColor() {
@@ -394,30 +528,29 @@ class KeyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _getKeyColor();
-    const baseWidth = 50.0;
-    final width = baseWidth * keyInfo.width - 4; // 4px margin
-    const height = 50.0;
+    final width = baseUnit * keyInfo.width - (baseUnit * 0.06);
+    final height = baseUnit;
 
     return Container(
       width: width,
       height: height,
-      margin: const EdgeInsets.all(2),
+      margin: EdgeInsets.all(baseUnit * 0.03),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 50),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
           color: isPressed
-              ? color.withOpacity(0.8)
-              : const Color(0xFF334155).withOpacity(0.5),
+              ? color.withValues(alpha: 0.85)
+              : const Color(0xFF475569).withValues(alpha: 0.65),
           border: Border.all(
-            color: isPressed ? color : color.withOpacity(0.3),
+            color: isPressed ? color : color.withValues(alpha: 0.35),
             width: isPressed ? 3 : 2,
           ),
           borderRadius: BorderRadius.circular(6),
           boxShadow: isPressed
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.6),
+                    color: color.withValues(alpha: 0.6),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),

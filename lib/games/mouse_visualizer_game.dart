@@ -153,7 +153,7 @@ class MouseVisualizerGame extends BaseGame {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3B82F6).withOpacity(0.6),
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.6),
               blurRadius: 20,
               spreadRadius: 5,
             ),
@@ -187,7 +187,7 @@ class MouseVisualizerGame extends BaseGame {
               height: size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF60A5FA).withOpacity(opacity * 0.6),
+                color: const Color(0xFF60A5FA).withValues(alpha: opacity * 0.6),
               ),
             ),
           ),
@@ -223,7 +223,7 @@ class MouseVisualizerGame extends BaseGame {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: ripple.color.withOpacity(opacity),
+                color: ripple.color.withValues(alpha: opacity),
                 width: 3,
               ),
             ),
@@ -279,7 +279,7 @@ class MouseVisualizerGame extends BaseGame {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: isPressed ? color : color.withOpacity(0.2),
+        color: isPressed ? color : color.withValues(alpha: 0.2),
         border: Border.all(
           color: color,
           width: 2,
@@ -288,7 +288,7 @@ class MouseVisualizerGame extends BaseGame {
         boxShadow: isPressed
             ? [
                 BoxShadow(
-                  color: color.withOpacity(0.5),
+                  color: color.withValues(alpha: 0.5),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -446,7 +446,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF334155).withOpacity(0.1) // Slate 700
+      ..color = const Color(0xFF334155).withValues(alpha: 0.1) // Slate 700
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 

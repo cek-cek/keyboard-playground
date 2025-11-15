@@ -257,7 +257,13 @@ class _GameCardState extends State<GameCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        transform: Matrix4.identity()..scale(isHighlighted ? 1.05 : 1.0),
+        transform: Matrix4.identity()
+          ..scaleByDouble(
+            isHighlighted ? 1.05 : 1.0,
+            isHighlighted ? 1.05 : 1.0,
+            1,
+            1,
+          ),
         child: InkWell(
           onTap: widget.onTap,
           borderRadius: BorderRadius.circular(20),
@@ -267,8 +273,8 @@ class _GameCardState extends State<GameCard> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: isHighlighted
-                  ? Colors.blue.withOpacity(0.4)
-                  : Colors.blue.withOpacity(0.2),
+                  ? Colors.blue.withValues(alpha: 0.4)
+                  : Colors.blue.withValues(alpha: 0.2),
               border: Border.all(
                 color: isHighlighted ? Colors.blueAccent : Colors.blue,
                 width: isHighlighted ? 4 : 2,
@@ -277,7 +283,7 @@ class _GameCardState extends State<GameCard> {
               boxShadow: isHighlighted
                   ? [
                       BoxShadow(
-                        color: Colors.blueAccent.withOpacity(0.5),
+                        color: Colors.blueAccent.withValues(alpha: 0.5),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),

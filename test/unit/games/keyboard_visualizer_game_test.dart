@@ -41,7 +41,8 @@ void main() {
         );
 
         expect(find.text('Keyboard Visualizer'), findsOneWidget);
-        expect(find.text('Press any key to see it light up!'), findsOneWidget);
+        // Helper instruction text removed; ensure title still present.
+        expect(find.text('Keyboard Visualizer'), findsOneWidget);
       });
 
       testWidgets('displays keyboard layout', (tester) async {
@@ -55,6 +56,21 @@ void main() {
 
         // Check that keyboard layout widget is present
         expect(find.byType(KeyboardLayoutWidget), findsOneWidget);
+      });
+
+      testWidgets('arrow keys are present', (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: game.buildUI(),
+            ),
+          ),
+        );
+
+        expect(find.text('↑'), findsOneWidget);
+        expect(find.text('←'), findsOneWidget);
+        expect(find.text('↓'), findsOneWidget);
+        expect(find.text('→'), findsOneWidget);
       });
 
       testWidgets('displays legend with key types', (tester) async {
@@ -194,6 +210,43 @@ void main() {
         // Verify the game handles all modifiers
         expect(find.byType(KeyboardLayoutWidget), findsOneWidget);
       });
+
+      test('maps generic modifier to both sides', () {
+        final shiftEvent = events.KeyEvent(
+          keyCode: 0,
+          key: 'Shift',
+          modifiers: {},
+          isDown: true,
+          timestamp: DateTime.now(),
+        );
+        game.onKeyEvent(shiftEvent);
+        expect(game.keyStates['ShiftLeft'], isTrue);
+        expect(game.keyStates['ShiftRight'], isTrue);
+      });
+
+      test('uppercases single letter keys', () {
+        final aEvent = events.KeyEvent(
+          keyCode: 65,
+          key: 'a',
+          modifiers: {},
+          isDown: true,
+          timestamp: DateTime.now(),
+        );
+        game.onKeyEvent(aEvent);
+        expect(game.keyStates['A'], isTrue);
+      });
+
+      test('maps Space to single space layout key', () {
+        final spaceEvent = events.KeyEvent(
+          keyCode: 32,
+          key: 'Space',
+          modifiers: {},
+          isDown: true,
+          timestamp: DateTime.now(),
+        );
+        game.onKeyEvent(spaceEvent);
+        expect(game.keyStates[' '], isTrue);
+      });
     });
 
     group('KeyboardLayoutWidget', () {
@@ -201,7 +254,7 @@ void main() {
         await tester.pumpWidget(
           const MaterialApp(
             home: Scaffold(
-              body: KeyboardLayoutWidget(keyStates: {}),
+              body: KeyboardLayoutWidget(keyStates: {}, baseUnit: 60),
             ),
           ),
         );
@@ -215,7 +268,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: KeyboardLayoutWidget(keyStates: keyStates),
+              body: KeyboardLayoutWidget(keyStates: keyStates, baseUnit: 60),
             ),
           ),
         );
@@ -231,7 +284,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: KeyboardLayoutWidget(keyStates: keyStates),
+              body: KeyboardLayoutWidget(keyStates: keyStates, baseUnit: 60),
             ),
           ),
         );
@@ -250,6 +303,7 @@ void main() {
               body: KeyWidget(
                 keyInfo: keyInfo,
                 isPressed: false,
+                baseUnit: 60,
               ),
             ),
           ),
@@ -267,6 +321,7 @@ void main() {
               body: KeyWidget(
                 keyInfo: keyInfo,
                 isPressed: false,
+                baseUnit: 60,
               ),
             ),
           ),
@@ -285,6 +340,7 @@ void main() {
               body: KeyWidget(
                 keyInfo: keyInfo,
                 isPressed: false,
+                baseUnit: 60,
               ),
             ),
           ),
@@ -301,6 +357,7 @@ void main() {
               body: KeyWidget(
                 keyInfo: keyInfo,
                 isPressed: true,
+                baseUnit: 60,
               ),
             ),
           ),

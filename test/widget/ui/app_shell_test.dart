@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keyboard_playground/core/exit_handler.dart';
 import 'package:keyboard_playground/core/game_manager.dart';
@@ -23,9 +24,11 @@ void main() {
 
     testWidgets('renders without crashing', (tester) async {
       await tester.pumpWidget(
-        AppShell(
-          gameManager: gameManager,
-          exitHandler: exitHandler,
+        MaterialApp(
+          home: AppShell(
+            gameManager: gameManager,
+            exitHandler: exitHandler,
+          ),
         ),
       );
 
@@ -35,9 +38,11 @@ void main() {
     testWidgets('displays no game screen when no game selected',
         (tester) async {
       await tester.pumpWidget(
-        AppShell(
-          gameManager: gameManager,
-          exitHandler: exitHandler,
+        MaterialApp(
+          home: AppShell(
+            gameManager: gameManager,
+            exitHandler: exitHandler,
+          ),
         ),
       );
 
@@ -51,9 +56,11 @@ void main() {
 
     testWidgets('displays choose a game button', (tester) async {
       await tester.pumpWidget(
-        AppShell(
-          gameManager: gameManager,
-          exitHandler: exitHandler,
+        MaterialApp(
+          home: AppShell(
+            gameManager: gameManager,
+            exitHandler: exitHandler,
+          ),
         ),
       );
 
@@ -65,9 +72,11 @@ void main() {
 
     testWidgets('exit progress indicator is hidden when idle', (tester) async {
       await tester.pumpWidget(
-        AppShell(
-          gameManager: gameManager,
-          exitHandler: exitHandler,
+        MaterialApp(
+          home: AppShell(
+            gameManager: gameManager,
+            exitHandler: exitHandler,
+          ),
         ),
       );
 

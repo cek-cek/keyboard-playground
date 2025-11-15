@@ -12,7 +12,6 @@ import 'package:keyboard_playground/core/exit_handler.dart';
 import 'package:keyboard_playground/core/game_manager.dart';
 import 'package:keyboard_playground/games/base_game.dart';
 import 'package:keyboard_playground/platform/window_control.dart';
-import 'package:keyboard_playground/ui/app_theme.dart';
 import 'package:keyboard_playground/ui/game_selection_menu.dart';
 import 'package:keyboard_playground/widgets/exit_progress_indicator.dart';
 
@@ -146,34 +145,21 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Keyboard Playground',
-      theme: AppTheme.kidFriendlyTheme,
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        // No app bar - fullscreen immersive experience
-        body: Stack(
-          children: [
-            // Game content area (fills screen)
-            Positioned.fill(
-              child: _buildGameContent(),
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned.fill(child: _buildGameContent()),
+          ExitProgressIndicator(progress: _exitProgress),
+          if (_showGameSelection)
+            GameSelectionMenu(
+              gameManager: widget.gameManager,
+              onGameSelected: (game) {
+                widget.gameManager.switchGame(game.id);
+                _toggleGameSelection();
+              },
+              onClose: _toggleGameSelection,
             ),
-
-            // Exit progress indicator (top-right overlay)
-            ExitProgressIndicator(progress: _exitProgress),
-
-            // Game selection menu (center overlay)
-            if (_showGameSelection)
-              GameSelectionMenu(
-                gameManager: widget.gameManager,
-                onGameSelected: (game) {
-                  widget.gameManager.switchGame(game.id);
-                  _toggleGameSelection();
-                },
-                onClose: _toggleGameSelection,
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

@@ -214,8 +214,8 @@ class ExitHandler {
 
     if (event.key == expectedKey) {
       debugPrint(
-        'Key pressed: ${event.key} - '
-        'Step: $_currentKeyboardStep/${_keyboardSequence.steps.length}',
+        'Key ${event.key} step '
+        '$_currentKeyboardStep/${_keyboardSequence.steps.length}',
       );
       // Correct key pressed
       _currentKeyboardStep++;
@@ -250,11 +250,9 @@ class ExitHandler {
 
     final corner = _getCorner(event.x, event.y);
     debugPrint(
-      'Mouse click at (${event.x}, ${event.y}) - '
-      'Screen: ${_actualScreenWidth}x$_actualScreenHeight - '
-      'Detected corner: $corner - '
-      'Expected: ${_mouseSequence.steps[_currentMouseStep]} - '
-      'Step: $_currentMouseStep/${_mouseSequence.steps.length}',
+      'Mouse (${event.x},${event.y}) corner $corner exp '
+      '${_mouseSequence.steps[_currentMouseStep]} step '
+      '$_currentMouseStep/${_mouseSequence.steps.length}',
     );
 
     if (corner == null) {
@@ -300,13 +298,14 @@ class ExitHandler {
   void updateScreenSize(double width, double height) {
     _actualScreenWidth = width;
     _actualScreenHeight = height;
+    debugPrint('ExitHandler size: ${width}x$height'); // Short summary
+    debugPrint('Corners TL(0-$cornerThreshold,0-$cornerThreshold)');
+    debugPrint('TR(${width - cornerThreshold}-$width,0-$cornerThreshold)');
     debugPrint(
-      'ExitHandler screen size updated: ${width}x$height - '
-      'Corners: TL(0-$cornerThreshold, 0-$cornerThreshold), '
-      'TR(${width - cornerThreshold}-$width, 0-$cornerThreshold), '
-      'BR(${width - cornerThreshold}-$width, ${height - cornerThreshold}-$height), '
-      'BL(0-$cornerThreshold, ${height - cornerThreshold}-$height)',
+      'BR(${width - cornerThreshold}-$width,'
+      '${height - cornerThreshold}-$height)',
     );
+    debugPrint('BL(0-$cornerThreshold,${height - cornerThreshold}-$height)');
   }
 
   /// Determines which corner (if any) the given coordinates are near.
