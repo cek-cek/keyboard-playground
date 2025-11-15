@@ -85,10 +85,10 @@ This document defines the execution order and dependencies for all PRDs. Use thi
 | PRD-007 | Testing Infrastructure | ✅ Complete | PRD-003 | PRD-003 complete | 6 hours |
 | PRD-008 | Integration & Base App | ✅ Complete | PRD-004, 005, 006, 007 | All Group 1 complete | 8 hours |
 | PRD-009 | Game: Exploding Letters | ✅ Complete | PRD-008 | PRD-008 complete | 12 hours |
-| PRD-010 | Game: Keyboard Visualizer | ✅ Complete | PRD-008 | PRD-008 complete | 10 hours |
-| PRD-011 | Game: Mouse Visualizer | ✅ Complete | PRD-008 | PRD-008 complete | 8 hours |
+| PRD-010 | Game: Keyboard Visualizer | ✅ Complete | PRD-008 | PRD-008 complete | 14 hours |
+| PRD-011 | Game: Mouse Visualizer | ✅ Complete | PRD-008 | PRD-008 complete | 13 hours |
 | PRD-012 | Documentation System | ⚪ Not Started | PRD-008 | PRD-008 complete | 6 hours |
-| PRD-013 | Performance Optimization | ⚪ Not Started | PRD-008 | PRD-008 complete | 8 hours |
+| PRD-013 | Performance Optimization & Test Coverage | ⚪ Not Started | PRD-008, 009, 010, 011 | All games complete | 20 hours |
 | PRD-014 | Accessibility Features | ⚪ Not Started | PRD-008 | PRD-008 complete | 6 hours |
 
 **Status Legend:**
@@ -198,48 +198,48 @@ Best order for minimum context switching:
 7. PRD-007 (6h)
 8. PRD-008 (8h)
 9. PRD-009 (12h)
-10. PRD-010 (10h)
-11. PRD-011 (8h)
+10. PRD-010 (14h)
+11. PRD-011 (13h)
 12. PRD-012 (6h)
-13. PRD-013 (8h)
+13. PRD-013 (20h)
 14. PRD-014 (6h)
 
-**Total**: ~104 hours (~2.6 weeks full-time)
+**Total**: ~125 hours (~3.1 weeks full-time)
 
 ### Strategy 2: Two Agents (Parallel)
 
 **Agent A (Critical Path):**
-1. PRD-001 → PRD-002 → PRD-003
-2. PRD-004 (complex, platform-specific)
-3. PRD-008 (integration)
-4. PRD-009 (first game)
-5. PRD-013 (performance)
+1. PRD-001 → PRD-002 → PRD-003 (12h)
+2. PRD-004 (complex, platform-specific) (16h)
+3. PRD-008 (integration) (8h)
+4. PRD-009 (first game) (12h)
+5. PRD-013 (performance + test coverage) (20h)
 
 **Agent B (Supporting Path):**
-1. Wait for PRD-003
-2. PRD-005, PRD-006, PRD-007 (in sequence or parallel)
-3. PRD-010, PRD-011 (games)
-4. PRD-012, PRD-014 (docs, accessibility)
+1. Wait for PRD-003 (12h idle)
+2. PRD-005, PRD-006, PRD-007 (18h)
+3. PRD-010, PRD-011 (games) (27h)
+4. PRD-012, PRD-014 (docs, accessibility) (12h)
 
-**Total**: ~60 hours (~1.5 weeks full-time with 2 agents)
+**Total**: ~70 hours wall time (~1.75 weeks full-time with 2 agents)
 
 ### Strategy 3: Four Agents (Maximum Parallelism)
 
 **Agent A (Critical Path):**
-- PRD-001 → PRD-002 → PRD-003 → PRD-004 → PRD-008
+- PRD-001 → PRD-002 → PRD-003 → PRD-004 → PRD-008 (50h)
 
 **Agent B (UI Path):**
-- Wait for PRD-003 → PRD-006 → PRD-009
+- Wait for PRD-003 (12h) → PRD-006 (8h) → PRD-009 (12h) → PRD-014 (6h)
 
 **Agent C (Testing Path):**
-- Wait for PRD-003 → PRD-007 → PRD-010
+- Wait for PRD-003 (12h) → PRD-007 (6h) → PRD-010 (14h)
 
-**Agent D (Exit & Docs Path):**
-- Wait for PRD-003 → PRD-005 → PRD-011 → PRD-012
+**Agent D (Exit & Games Path):**
+- Wait for PRD-003 (12h) → PRD-005 (4h) → PRD-011 (13h) → PRD-012 (6h)
 
-Then all agents can pick up Group 3 tasks (PRD-013, PRD-014) as available.
+Then Agent A can do PRD-013 (20h) while others complete remaining tasks.
 
-**Total**: ~40 hours (~1 week full-time with 4 agents)
+**Total**: ~50 hours wall time (~1.25 weeks full-time with 4 agents)
 
 ## Quick Reference: Can I Start This PRD?
 
@@ -285,12 +285,17 @@ Can I start PRD-XXX?
 The **critical path** (longest sequence of dependent tasks) is:
 
 ```
-PRD-001 (2h) → PRD-002 (4h) → PRD-003 (6h) → PRD-004 (16h) → PRD-008 (8h) → PRD-009 (12h)
+PRD-001 (2h) → PRD-002 (4h) → PRD-003 (6h) → PRD-004 (16h) → PRD-008 (8h) →
+PRD-009 (12h) → PRD-013 (20h)
 
-Total critical path: 48 hours
+Total critical path: 68 hours
 ```
 
-**Key Insight**: PRD-004 (Input Capture) is the bottleneck. This is the most complex and takes longest. If single agent, start this immediately after PRD-003.
+**Key Insights**:
+- PRD-004 (Input Capture) is the first bottleneck - most complex platform-specific code
+- PRD-013 (Performance + Test Coverage) is now the longest single PRD at 20 hours
+- PRD-013 should ideally wait for all games (009-011) to be complete for comprehensive testing
+- If single agent, prioritize PRD-004 immediately after PRD-003
 
 ## Merge Order Requirements
 

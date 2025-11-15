@@ -51,11 +51,15 @@ The app needs:
 - Optional overlay menu for game selection
 
 **FR-003**: Game Selection UI
-- Trigger via hidden gesture (e.g., hold Shift+Escape for 2 seconds)
+- Trigger via multiple methods:
+  - Double-click any screen corner (within 100px radius)
+  - Hold Alt+Ctrl+Esc simultaneously for 1 second
 - Grid of game cards with icon, name, description
 - Large touch targets (minimum 100x100px)
-- Keyboard navigation support
-- Escape to close without switching
+- Full keyboard navigation support (arrow keys to navigate, Enter to select)
+- Full mouse support (hover highlighting, click to select)
+- Escape or click outside to close without switching
+- Visual feedback on corner hover (subtle corner indicator)
 
 **FR-004**: Theme & Styling
 - High-contrast color scheme
@@ -201,7 +205,12 @@ class _AppShellState extends State<AppShell> {
       _handleExit();
     });
 
-    // TODO: Listen for game selection gesture (Shift+Escape hold)
+    _setupGameSelectionGestures();
+  }
+
+  void _setupGameSelectionGestures() {
+    // Listen for Alt+Ctrl+Esc hold (1 second)
+    // Listen for corner double-clicks
   }
 
   Future<void> _handleExit() async {
@@ -263,7 +272,7 @@ class _AppShellState extends State<AppShell> {
 ```dart
 // lib/ui/game_selection_menu.dart
 
-class GameSelectionMenu extends StatelessWidget {
+class GameSelectionMenu extends StatefulWidget {
   final GameManager gameManager;
   final void Function(BaseGame) onGameSelected;
   final VoidCallback onClose;
@@ -276,46 +285,105 @@ class GameSelectionMenu extends StatelessWidget {
   });
 
   @override
+  State<GameSelectionMenu> createState() => _GameSelectionMenuState();
+}
+
+class _GameSelectionMenuState extends State<GameSelectionMenu> {
+  int _selectedIndex = 0;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return;
+
+    final games = widget.gameManager.availableGames;
+
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowLeft:
+        setState(() => _selectedIndex = (_selectedIndex - 1) % games.length);
+        break;
+      case LogicalKeyboardKey.arrowRight:
+        setState(() => _selectedIndex = (_selectedIndex + 1) % games.length);
+        break;
+      case LogicalKeyboardKey.arrowUp:
+        // Navigate up in grid (assume 3 columns)
+        setState(() => _selectedIndex = (_selectedIndex - 3) % games.length);
+        break;
+      case LogicalKeyboardKey.arrowDown:
+        // Navigate down in grid
+        setState(() => _selectedIndex = (_selectedIndex + 3) % games.length);
+        break;
+      case LogicalKeyboardKey.enter:
+      case LogicalKeyboardKey.space:
+        widget.onGameSelected(games[_selectedIndex]);
+        break;
+      case LogicalKeyboardKey.escape:
+        widget.onClose();
+        break;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onClose,
-      child: Container(
-        color: Colors.black87,
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Choose a Game',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+    final games = widget.gameManager.availableGames;
+
+    return KeyboardListener(
+      focusNode: _focusNode,
+      onKeyEvent: _handleKeyEvent,
+      child: GestureDetector(
+        onTap: widget.onClose,
+        child: Container(
+          color: Colors.black87,
+          child: Center(
+            child: GestureDetector(
+              onTap: () {}, // Prevent closing when clicking on menu
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Choose a Game',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      alignment: WrapAlignment.center,
+                      children: games.asMap().entries.map((entry) {
+                        return GameCard(
+                          game: entry.value,
+                          isSelected: entry.key == _selectedIndex,
+                          onTap: () => widget.onGameSelected(entry.value),
+                          onHover: () => setState(() => _selectedIndex = entry.key),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'Use arrow keys to navigate, Enter to select, Esc to cancel',
+                      style: TextStyle(fontSize: 16, color: Colors.white54),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
-                const SizedBox(height: 32),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  alignment: WrapAlignment.center,
-                  children: gameManager.availableGames.map((game) {
-                    return GameCard(
-                      game: game,
-                      onTap: () => onGameSelected(game),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 32),
-                TextButton(
-                  onPressed: onClose,
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(fontSize: 20, color: Colors.white70),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -324,57 +392,96 @@ class GameSelectionMenu extends StatelessWidget {
   }
 }
 
-class GameCard extends StatelessWidget {
+class GameCard extends StatefulWidget {
   final BaseGame game;
+  final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback onHover;
 
   const GameCard({
     super.key,
     required this.game,
+    required this.isSelected,
     required this.onTap,
+    required this.onHover,
   });
 
   @override
+  State<GameCard> createState() => _GameCardState();
+}
+
+class _GameCardState extends State<GameCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 200,
-        height: 200,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.3),
-          border: Border.all(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // TODO: Add game icon
-            const Icon(Icons.videogame_asset, size: 64, color: Colors.white),
-            const SizedBox(height: 16),
-            Text(
-              game.name,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+    final isHighlighted = widget.isSelected || _isHovered;
+
+    return MouseRegion(
+      onEnter: (_) {
+        setState(() => _isHovered = true);
+        widget.onHover();
+      },
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 200,
+          height: 200,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isHighlighted
+              ? Colors.blue.withOpacity(0.5)
+              : Colors.blue.withOpacity(0.3),
+            border: Border.all(
+              color: isHighlighted ? Colors.blueAccent : Colors.blue,
+              width: isHighlighted ? 4 : 2,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isHighlighted
+              ? [
+                  BoxShadow(
+                    color: Colors.blueAccent.withOpacity(0.5),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : [],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // TODO: Add game icon
+              Icon(
+                Icons.videogame_asset,
+                size: isHighlighted ? 72 : 64,
                 color: Colors.white,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              game.description,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
+              const SizedBox(height: 16),
+              Text(
+                widget.game.name,
+                style: TextStyle(
+                  fontSize: isHighlighted ? 22 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                widget.game.description,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -531,11 +638,16 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
 
 ### Game Selection
 
-- [ ] Game selection menu triggered by gesture
+- [ ] Game selection menu triggered by corner double-click (all 4 corners)
+- [ ] Game selection menu triggered by Alt+Ctrl+Esc hold (1 second)
+- [ ] Visual corner indicators on hover (subtle)
 - [ ] All available games displayed as cards
+- [ ] Full keyboard navigation (arrow keys to navigate, Enter to select)
+- [ ] Full mouse support (hover highlighting, click to select)
+- [ ] Selected game highlighted with border and glow
 - [ ] Game switching works smoothly
-- [ ] Keyboard navigation works
-- [ ] Cancel returns to current game
+- [ ] Escape or click outside closes menu without switching
+- [ ] Help text shown at bottom of menu
 
 ### Theme & Styling
 
