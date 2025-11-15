@@ -69,8 +69,11 @@ class KeyboardVisualizerGame extends BaseGame {
         // Compute intrinsic keyboard height (unscaled) for potential scaling.
         final rowCount = KeyboardLayoutWidget._keyboardLayout.length;
         final rowSpacing = baseUnit * 0.16;
-        final keyboardPadding = baseUnit * 0.8; // inside container total vertical padding
-        final intrinsicKeyboardHeight = rowCount * baseUnit + (rowSpacing * (rowCount - 1)) + keyboardPadding;
+        final keyboardPadding =
+            baseUnit * 0.8; // inside container total vertical padding
+        final intrinsicKeyboardHeight = rowCount * baseUnit +
+            (rowSpacing * (rowCount - 1)) +
+            keyboardPadding;
         // Overhead (title + top/bottom spacers + legend) approximate and adaptive.
         final titleFontSize = smallHeight ? 28.0 : 48.0;
         final topSpacer = smallHeight ? 12.0 : 24.0;
@@ -96,54 +99,57 @@ class KeyboardVisualizerGame extends BaseGame {
           ),
           child: RepaintBoundary(
             child: ValueListenableBuilder<int>(
-            valueListenable: _stateNotifier,
-            builder: (context, _, __) {
-              final keyboard = KeyboardLayoutWidget(
-                keyStates: _keyStates,
-                baseUnit: baseUnit,
-              );
-              final columnChildren = <Widget>[
-                SizedBox(height: topSpacer),
-                Text(
-                  'Keyboard Visualizer',
-                  style: TextStyle(
-                    fontSize: titleFontSize,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 2,
-                  ),
-                ),
-                SizedBox(height: afterTitleSpacer),
-                // Scaled keyboard
-                SizedBox(
-                  height: screenHeight * 0.42, // allocate portion of screen height
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      height: fittedKeyboardHeight,
-                      child: keyboard,
+              valueListenable: _stateNotifier,
+              builder: (context, _, __) {
+                final keyboard = KeyboardLayoutWidget(
+                  keyStates: _keyStates,
+                  baseUnit: baseUnit,
+                );
+                final columnChildren = <Widget>[
+                  SizedBox(height: topSpacer),
+                  Text(
+                    'Keyboard Visualizer',
+                    style: TextStyle(
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 2,
                     ),
                   ),
-                ),
-                SizedBox(height: smallHeight ? 8 : 12),
-                _buildLegend(compact: smallHeight),
-                SizedBox(height: bottomSpacer),
-              ];
-              return ListView(
-                padding: EdgeInsets.zero,
-                children: columnChildren,
-              );
-            },
-          ),
+                  SizedBox(height: afterTitleSpacer),
+                  // Scaled keyboard
+                  SizedBox(
+                    height: screenHeight *
+                        0.38, // allocate portion of screen height (reduced from 0.42 to fix overflow)
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        height: fittedKeyboardHeight,
+                        child: keyboard,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: smallHeight ? 8 : 12),
+                  _buildLegend(compact: smallHeight),
+                  SizedBox(height: bottomSpacer),
+                ];
+                return ListView(
+                  padding: EdgeInsets.zero,
+                  children: columnChildren,
+                );
+              },
+            ),
           ),
         );
       },
     );
   }
+
   double _computeBaseUnitWidth(double screenWidth) {
     const numberRowUnits = 1 + 10 + 1 + 1 + 2; // simplified unit count
-    final targetWidth = screenWidth * 0.70; // shrink for test environment to avoid vertical overflow
+    final targetWidth = screenWidth *
+        0.65; // balanced size for readability
     final base = targetWidth / (numberRowUnits * 1.15);
     return base.clamp(18.0, 90.0);
   }
@@ -171,7 +177,7 @@ class KeyboardVisualizerGame extends BaseGame {
           SizedBox(width: spacing),
           _buildLegendItem('Numbers', AppTheme.brightGreen),
           SizedBox(width: spacing),
-            _buildLegendItem('Modifiers', AppTheme.brightOrange),
+          _buildLegendItem('Modifiers', AppTheme.brightOrange),
           SizedBox(width: spacing),
           _buildLegendItem('Special', AppTheme.brightPurple),
         ],
@@ -425,8 +431,10 @@ class KeyboardLayoutWidget extends StatelessWidget {
         ],
       ),
       child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Column(
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             for (var i = 0; i < _keyboardLayout.length; i++)
@@ -451,6 +459,7 @@ class KeyboardLayoutWidget extends StatelessWidget {
                 ),
               ),
           ],
+          ),
         ),
       ),
     );

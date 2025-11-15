@@ -44,18 +44,20 @@ class ExitProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Hide when idle
-    if (progress.state == ExitSequenceState.idle) {
-      return const SizedBox.shrink();
-    }
-
+    // Always return a Positioned widget to maintain Stack layout consistency.
+    // When idle, use an invisible/zero-size positioned widget instead of
+    // SizedBox.shrink() to work around a rendering issue where the Stack
+    // doesn't properly render its first child unless there's a Positioned
+    // second child.
     return Positioned(
       top: 16,
       right: 16,
-      child: AnimatedOpacity(
-        opacity: progress.state == ExitSequenceState.idle ? 0.0 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        child: Container(
+      child: IgnorePointer(
+        ignoring: progress.state == ExitSequenceState.idle,
+        child: AnimatedOpacity(
+          opacity: progress.state == ExitSequenceState.idle ? 0.0 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.7),
@@ -119,6 +121,7 @@ class ExitProgressIndicator extends StatelessWidget {
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),
